@@ -189,14 +189,14 @@ export default function Register() {
     setLoading(true);
     setError('');
     
-  try {
+    try {
       // Validaciones de nombres: solo letras y espacios
       const nameRegex = /^[A-Za-zÀ-ÿ\s'-]+$/;
       if (!formData.nombre || !nameRegex.test(formData.nombre)) throw new Error('El nombre solo debe contener letras y espacios');
       if (!formData.apellidoPaterno || !nameRegex.test(formData.apellidoPaterno)) throw new Error('El apellido paterno solo debe contener letras y espacios');
       if (!formData.apellidoMaterno || !nameRegex.test(formData.apellidoMaterno)) throw new Error('El apellido materno solo debe contener letras y espacios');
-  // Validación de institución: solo letras y espacios
-  if (!formData.institucion || !nameRegex.test(formData.institucion)) throw new Error('La institución solo debe contener letras y espacios');
+      // Validación de institución: solo letras y espacios
+      if (!formData.institucion || !nameRegex.test(formData.institucion)) throw new Error('La institución solo debe contener letras y espacios');
 
       const formDataToSend = new FormData();
       Object.keys(formData).forEach(key => {
@@ -205,20 +205,32 @@ export default function Register() {
       if (cvPdf) {
         formDataToSend.append('pdf', cvPdf);
       }
-      // Enviar el formulario al endpoint correcto y aumentar el timeout
-      const response = await fetch('/api/formulation', {
+
+      // Enviar el formulario al endpoint correcto
+      const response = await fetch(API_CONFIG.FORMULATION_URL, {
         method: 'POST',
         body: formDataToSend,
-        headers: {},
-        timeout: 30000 // 30 segundos
+        // No incluir Content-Type header para FormData
       });
+
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Error en el registro');
+        let errorMessage = 'Error en el registro';
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.error || errorMessage;
+        } catch {
+          // Si no se puede parsear el JSON, usar el status text
+          errorMessage = `Error ${response.status}: ${response.statusText}`;
+        }
+        throw new Error(errorMessage);
       }
+
+      const result = await response.json();
+      console.log('Registro exitoso:', result);
       setSuccess(true);
       setTimeout(() => navigate('/login'), 1500);
     } catch (err) {
+      console.error('Error al registrar:', err);
       setError(err.message || 'Error al registrar usuario');
     } finally {
       setLoading(false);
