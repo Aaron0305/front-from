@@ -1,4 +1,4 @@
-import React, { useState, useContext, useEffect, useRef } from 'react';
+import React, { useState, useContext } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { AuthContext } from '../../contexts/AuthContext';
 import { API_CONFIG } from '../../config/api.js';
@@ -95,7 +95,7 @@ const AnimatedTextField = ({ label, type, value, onChange, icon, endAdornment, s
 
 export default function Register() {
   const [activeStep, setActiveStep] = useState(0);
-  const [foto, setFoto] = useState(null);
+  // foto no utilizada actualmente
   const [formData, setFormData] = useState({
     nombre: '',
     apellidoPaterno: '',
@@ -105,7 +105,7 @@ export default function Register() {
     telefonoCelular: '',
     correoPersonal: '',
     correoInstitucional: '',
-    claveEscuela: '',
+  institucion: '',
     carrera: '',
     promedio: '',
     estado: '', // regular o irregular
@@ -116,10 +116,8 @@ export default function Register() {
   
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-  const { register, checkNumeroControlExists } = useContext(AuthContext);
+  useContext(AuthContext);
   const navigate = useNavigate();
 
   // (se removió carga de carreras innecesaria)
@@ -133,7 +131,7 @@ export default function Register() {
       newValue = value.replace(/[^0-9.]/g, '');
     }
   // Para nombre, apellidos y carrera permitir solo letras, espacios, guiones y apóstrofes
-  if (name === 'nombre' || name === 'apellidoPaterno' || name === 'apellidoMaterno' || name === 'carrera') {
+  if (name === 'nombre' || name === 'apellidoPaterno' || name === 'apellidoMaterno' || name === 'carrera' || name === 'institucion') {
       // Permite letras latinas acentuadas, espacios, guion y apóstrofe
       newValue = value.replace(/[^A-Za-zÀ-ÿ\s'-]/g, '');
     }
@@ -152,26 +150,8 @@ export default function Register() {
 
   // (verificación de número de control removida si no se usa en UI)
 
-  const handleShowPassword = (field) => {
-    if (field === 'password') {
-      setShowPassword(!showPassword);
-    } else {
-      setShowConfirmPassword(!showConfirmPassword);
-    }
-  };
-
-  // (manejo de número de control removido)
-
   // (manejo de foto simplificado — guardamos archivo si se provee)
-  const handleFotoChange = (event) => {
-    const file = event.target.files && event.target.files[0];
-    if (!file) return;
-    if (file.size > 5 * 1024 * 1024) {
-      setError('La imagen no debe superar los 5MB');
-      return;
-    }
-    setFoto(file);
-  };
+  // Nota: la carga de foto se mantiene pero el input no está en el formulario actual.
 
   // Manejo de carga de PDF académico
   const handleCvChange = (event) => {
@@ -215,14 +195,13 @@ export default function Register() {
       if (!formData.nombre || !nameRegex.test(formData.nombre)) throw new Error('El nombre solo debe contener letras y espacios');
       if (!formData.apellidoPaterno || !nameRegex.test(formData.apellidoPaterno)) throw new Error('El apellido paterno solo debe contener letras y espacios');
       if (!formData.apellidoMaterno || !nameRegex.test(formData.apellidoMaterno)) throw new Error('El apellido materno solo debe contener letras y espacios');
+  // Validación de institución: solo letras y espacios
+  if (!formData.institucion || !nameRegex.test(formData.institucion)) throw new Error('La institución solo debe contener letras y espacios');
 
       const formDataToSend = new FormData();
       Object.keys(formData).forEach(key => {
         formDataToSend.append(key, formData[key]);
       });
-      if (foto) {
-        formDataToSend.append('fotoPerfil', foto);
-      }
       if (cvPdf) {
         formDataToSend.append('pdf', cvPdf);
       }
@@ -253,282 +232,142 @@ export default function Register() {
       case 0:
         return (
           <Box sx={{ mt: 2, width: '100%' }}>
-            <Grid container spacing={2}>
-              <Grid item xs={12} md={6}>
-                <AnimatedTextField
-                  label="Nombre(s)"
-                  name="nombre"
-                  value={formData.nombre}
-                  onChange={handleChange}
-                  required
-                  icon={<Person />}
-                  InputLabelProps={{
-                    shrink: true,
-                    sx: {
-                      left: 56,
-                      background: 'white',
-                      px: 0.5,
-                      zIndex: 2,
-                      pointerEvents: 'none',
-                      '&:after': {
-                        content: '""',
-                        position: 'absolute',
-                        left: 0,
-                        right: 0,
-                        bottom: 0,
-                        height: '2px',
-                        background: 'inherit',
-                        zIndex: 1,
-                      }
-                    }
-                  }}
-                  InputProps={{
-                    startAdornment: (
-                      <InputAdornment position="start" sx={{ ml: 1, mr: 0.5 }}>
-                        <Person />
-                      </InputAdornment>
-                    ),
-                    sx: { pl: 5.5 }
-                  }}
-                />
-              </Grid>
-              <Grid item xs={12} md={3}>
-                <AnimatedTextField
-                  label="Apellido paterno"
-                  name="apellidoPaterno"
-                  value={formData.apellidoPaterno}
-                  onChange={handleChange}
-                  required
-                  icon={<Person />}
-                  InputLabelProps={{
-                    shrink: true,
-                    sx: {
-                      left: 56,
-                      background: 'white',
-                      px: 0.5,
-                      zIndex: 2,
-                      pointerEvents: 'none',
-                      '&:after': {
-                        content: '""',
-                        position: 'absolute',
-                        left: 0,
-                        right: 0,
-                        bottom: 0,
-                        height: '2px',
-                        background: 'inherit',
-                        zIndex: 1,
-                      }
-                    }
-                  }}
-                  InputProps={{
-                    startAdornment: (
-                      <InputAdornment position="start" sx={{ ml: 1, mr: 0.5 }}>
-                        <Person />
-                      </InputAdornment>
-                    ),
-                    sx: { pl: 5.5 }
-                  }}
-                />
-              </Grid>
-              <Grid item xs={12} md={3}>
-                <AnimatedTextField
-                  label="Apellido materno"
-                  name="apellidoMaterno"
-                  value={formData.apellidoMaterno}
-                  onChange={handleChange}
-                  required
-                  icon={<Person />}
-                  InputLabelProps={{
-                    shrink: true,
-                    sx: {
-                      left: 56,
-                      background: 'white',
-                      px: 0.5,
-                      zIndex: 2,
-                      pointerEvents: 'none',
-                      '&:after': {
-                        content: '""',
-                        position: 'absolute',
-                        left: 0,
-                        right: 0,
-                        bottom: 0,
-                        height: '2px',
-                        background: 'inherit',
-                        zIndex: 1,
-                      }
-                    }
-                  }}
-                  InputProps={{
-                    startAdornment: (
-                      <InputAdornment position="start" sx={{ ml: 1, mr: 0.5 }}>
-                        <Person />
-                      </InputAdornment>
-                    ),
-                    sx: { pl: 5.5 }
-                  }}
-                />
-              </Grid>
-              <Grid item xs={12} md={6}>
-                <AnimatedTextField
-                  label="CURP"
-                  name="curp"
-                  value={formData.curp}
-                  onChange={handleChange}
-                  required
-                  helperText="18 caracteres, ejemplo: GARC800101HMCLNS09"
-                />
-              </Grid>
-              <Grid item xs={12} md={3}>
-                <AnimatedTextField
-                  label="Teléfono celular"
-                  name="telefonoCelular"
-                  value={formData.telefonoCelular}
-                  onChange={handleChange}
-                  required
-                  type="tel"
-                  inputProps={{ inputMode: 'numeric' }}
-                  helperText="Ejemplo: 7121234567"
-                />
-              </Grid>
-              <Grid item xs={12} md={6}>
-                <AnimatedTextField
-                  label="Correo personal"
-                  name="correoPersonal"
-                  value={formData.correoPersonal}
-                  onChange={handleChange}
-                  required
-                  type="email"
-                  helperText="Ejemplo: usuario@gmail.com"
-                />
-              </Grid>
-            </Grid>
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, alignItems: 'center' }}>
+              <AnimatedTextField
+                label="Nombre(s)"
+                name="nombre"
+                value={formData.nombre}
+                onChange={handleChange}
+                required
+                icon={<Person />}
+                sx={{ maxWidth: 500, width: '100%' }}
+              />
+              <AnimatedTextField
+                label="Apellido paterno"
+                name="apellidoPaterno"
+                value={formData.apellidoPaterno}
+                onChange={handleChange}
+                required
+                icon={<Person />}
+                sx={{ maxWidth: 500, width: '100%' }}
+              />
+              <AnimatedTextField
+                label="Apellido materno"
+                name="apellidoMaterno"
+                value={formData.apellidoMaterno}
+                onChange={handleChange}
+                required
+                icon={<Person />}
+                sx={{ maxWidth: 500, width: '100%' }}
+              />
+              <AnimatedTextField
+                label="CURP"
+                name="curp"
+                value={formData.curp}
+                onChange={handleChange}
+                required
+                helperText="18 caracteres, ejemplo: GARC800101HMCLNS09"
+                sx={{ maxWidth: 500, width: '100%' }}
+              />
+              <AnimatedTextField
+                label="Teléfono de casa"
+                name="telefonoCasa"
+                value={formData.telefonoCasa}
+                onChange={handleChange}
+                required
+                type="tel"
+                inputProps={{ inputMode: 'numeric' }}
+                helperText="Ejemplo: 7121234567"
+                sx={{ maxWidth: 500, width: '100%' }}
+              />
+              <AnimatedTextField
+                label="Teléfono celular"
+                name="telefonoCelular"
+                value={formData.telefonoCelular}
+                onChange={handleChange}
+                required
+                type="tel"
+                inputProps={{ inputMode: 'numeric' }}
+                helperText="Ejemplo: 7121234567"
+                sx={{ maxWidth: 500, width: '100%' }}
+              />
+              <AnimatedTextField
+                label="Correo personal"
+                name="correoPersonal"
+                value={formData.correoPersonal}
+                onChange={handleChange}
+                required
+                type="email"
+                helperText="Ejemplo: usuario@gmail.com"
+                sx={{ maxWidth: 500, width: '100%' }}
+              />
+            </Box>
           </Box>
         );
       case 1:
         return (
           <Box sx={{ mt: 2, width: '100%' }}>
-            <Grid container spacing={2}>
-              <Grid item xs={12} md={4}>
-                <AnimatedTextField
-                  label="Clave de la escuela"
-                  name="claveEscuela"
-                  value={formData.claveEscuela}
-                  onChange={handleChange}
-                  required
-                  icon={<Badge />}
-                  helperText="Escribe tu número de control escolar"
-                  InputLabelProps={{
-                    shrink: true,
-                    sx: {
-                      left: 56,
-                      background: 'white',
-                      px: 0.5,
-                      zIndex: 2,
-                      pointerEvents: 'none',
-                      '&:after': {
-                        content: '""',
-                        position: 'absolute',
-                        left: 0,
-                        right: 0,
-                        bottom: 0,
-                        height: '2px',
-                        background: 'inherit',
-                        zIndex: 1,
-                      }
-                    }
-                  }}
-                  InputProps={{
-                    startAdornment: (
-                      <InputAdornment position="start" sx={{ ml: 1, mr: 0.5 }}>
-                        <Badge />
-                      </InputAdornment>
-                    ),
-                    sx: { pl: 5.5 }
-                  }}
-                />
-              </Grid>
-              <Grid item xs={12} md={4}>
-                <AnimatedTextField
-                  label="Carrera"
-                  name="carrera"
-                  value={formData.carrera}
-                  onChange={handleChange}
-                  required
-                  icon={<School />}
-                  helperText="Escribe tu carrera"
-                  InputLabelProps={{
-                    shrink: true,
-                    sx: {
-                      left: 56,
-                      background: 'white',
-                      px: 0.5,
-                      zIndex: 2,
-                      pointerEvents: 'none',
-                      '&:after': {
-                        content: '""',
-                        position: 'absolute',
-                        left: 0,
-                        right: 0,
-                        bottom: 0,
-                        height: '2px',
-                        background: 'inherit',
-                        zIndex: 1,
-                      }
-                    }
-                  }}
-                  InputProps={{
-                    startAdornment: (
-                      <InputAdornment position="start" sx={{ ml: 1, mr: 0.5 }}>
-                        <School />
-                      </InputAdornment>
-                    ),
-                    sx: { pl: 5.5 }
-                  }}
-                />
-              </Grid>
-              <Grid item xs={12} md={4}>
-                <AnimatedTextField
-                  label="Promedio general"
-                  name="promedio"
-                  value={formData.promedio}
-                  onChange={handleChange}
-                  required
-                  type="text"
-                  inputProps={{ inputMode: 'decimal', pattern: '[0-9.]*' }}
-                  helperText="Ejemplo: 8.0, 8.5, 9"
-                />
-              </Grid>
-              <Grid item xs={12} md={4}>
-                <AnimatedTextField
-                  label="Estado académico"
-                  name="estado"
-                  value={formData.estado}
-                  onChange={handleChange}
-                  required
-                  select
-                  icon={<School />}
-                  InputLabelProps={{ shrink: true }}
-                  InputProps={{
-                    startAdornment: (
-                      <InputAdornment position="start" sx={{ ml: 1, mr: 0.5 }}>
-                        <School />
-                      </InputAdornment>
-                    ),
-                    sx: { pl: 5.5 }
-                  }}
-                >
-                  <MenuItem value="">Selecciona estado</MenuItem>
-                  <MenuItem value="regular">Regular</MenuItem>
-                  <MenuItem value="irregular">Irregular</MenuItem>
-                </AnimatedTextField>
-              </Grid>
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, alignItems: 'center' }}>
+              <AnimatedTextField
+                label="Institución"
+                name="institucion"
+                value={formData.institucion}
+                onChange={handleChange}
+                required
+                icon={<Badge />}
+                helperText="Escribe el nombre de tu institución (solo letras)"
+                sx={{ maxWidth: 500, width: '100%' }}
+              />
+              <AnimatedTextField
+                label="Carrera"
+                name="carrera"
+                value={formData.carrera}
+                onChange={handleChange}
+                required
+                icon={<School />}
+                helperText="Escribe tu carrera"
+                sx={{ maxWidth: 500, width: '100%' }}
+              />
+              <AnimatedTextField
+                label="Promedio general"
+                name="promedio"
+                value={formData.promedio}
+                onChange={handleChange}
+                required
+                type="text"
+                inputProps={{ inputMode: 'decimal', pattern: '[0-9.]*' }}
+                helperText="Ejemplo: 8.0, 8.5, 9"
+                sx={{ maxWidth: 500, width: '100%' }}
+              />
+              <AnimatedTextField
+                label="Estado académico"
+                name="estado"
+                value={formData.estado}
+                onChange={handleChange}
+                required
+                select
+                icon={<School />}
+                sx={{ maxWidth: 500, width: '100%' }}
+              >
+                <MenuItem value="">Selecciona estado</MenuItem>
+                <MenuItem value="regular">Regular</MenuItem>
+                <MenuItem value="irregular">Irregular</MenuItem>
+              </AnimatedTextField>
 
-              <Grid item xs={12} md={12}>
+              <Box sx={{ mt: 2, textAlign: 'center', maxWidth: 500, width: '100%' }}>
                 <Button
                   variant="outlined"
                   component="label"
                   color={cvError ? 'error' : 'primary'}
-                  sx={{ mt: 2, mb: 1 }}
+                  sx={{ 
+                    mb: 1,
+                    px: 4,
+                    py: 1.5,
+                    fontSize: '1rem',
+                    borderRadius: 2,
+                    textTransform: 'none',
+                    width: '100%'
+                  }}
                 >
                   Adjuntar documento académico (PDF, máx. 5MB)
                   <input
@@ -539,15 +378,15 @@ export default function Register() {
                   />
                 </Button>
                 {cvPdf && (
-                  <Typography variant="body2" sx={{ mt: 1 }}>
+                  <Typography variant="body2" sx={{ mt: 1, color: 'success.main' }}>
                     Archivo seleccionado: {cvPdf.name}
                   </Typography>
                 )}
                 {cvError && (
                   <Alert severity="error" sx={{ mt: 1 }}>{cvError}</Alert>
                 )}
-              </Grid>
-            </Grid>
+              </Box>
+            </Box>
           </Box>
         );
       default:
@@ -623,6 +462,27 @@ export default function Register() {
                       ¡Registro exitoso! Redirigiendo al inicio de sesión...
                     </Alert>
                   </Grow>
+                )}
+                {/* Mostrar datos en forma de lista profesional al registrar */}
+                {success && (
+                  <Box sx={{ mt: 4, mb: 2 }}>
+                    <Typography variant="h6" fontWeight="bold" sx={{ mb: 2 }}>
+                      Datos registrados:
+                    </Typography>
+                    <Box component="ul" sx={{ listStyle: 'none', p: 0, m: 0 }}>
+                      <li><strong>Nombre:</strong> {formData.nombre}</li>
+                      <li><strong>Apellido paterno:</strong> {formData.apellidoPaterno}</li>
+                      <li><strong>Apellido materno:</strong> {formData.apellidoMaterno}</li>
+                      <li><strong>CURP:</strong> {formData.curp}</li>
+                      <li><strong>Teléfono de casa:</strong> {formData.telefonoCasa}</li>
+                      <li><strong>Teléfono celular:</strong> {formData.telefonoCelular}</li>
+                      <li><strong>Correo personal:</strong> {formData.correoPersonal}</li>
+                      <li><strong>Institución:</strong> {formData.institucion}</li>
+                      <li><strong>Carrera:</strong> {formData.carrera}</li>
+                      <li><strong>Promedio general:</strong> {formData.promedio}</li>
+                      <li><strong>Estado académico:</strong> {formData.estado === 'regular' ? 'Regular' : 'Irregular'}</li>
+                    </Box>
+                  </Box>
                 )}
 
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 5 }}>

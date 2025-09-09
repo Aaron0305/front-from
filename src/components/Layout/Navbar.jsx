@@ -289,7 +289,7 @@ export default function Navbar() {
                     '&::after': isActive('/login') ? { width: '90%', backgroundColor: '#FFD700' } : {},
                   }}
                 >
-                  Iniciar Sesión
+                  Administracion
                 </NavButton>
               </Fade>
               <Fade in={true} timeout={1300}>
