@@ -15,10 +15,8 @@ import {
   Badge
 } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
-import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
 import NotificationsIcon from '@mui/icons-material/Notifications';
 import { AuthContext } from '../../contexts/AuthContext';
-import AdminAccessDialog from '../Admin/AdminAccessDialog';
 import { io } from 'socket.io-client';
 import useSound from 'use-sound';
 import notificationSound from '../../assets/notification.mp3';
@@ -65,30 +63,13 @@ const NavButton = styled(Button)(() => ({
   }
 }));
 
-// Botón especial para administrador
-const AdminButton = styled(Button)(() => ({
-  color: '#ffffff',
-  fontWeight: 600,
-  fontSize: '0.95rem',
-  backgroundColor: 'rgba(255, 215, 0, 0.15)',
-  border: '1px solid rgba(255, 215, 0, 0.4)',
-  borderRadius: '6px',
-  transition: 'all 0.3s ease',
-  '&:hover': {
-    backgroundColor: 'rgba(255, 215, 0, 0.25)',
-    transform: 'translateY(-1px)',
-    boxShadow: '0 4px 12px rgba(255, 215, 0, 0.3)',
-  }
-}));
 
 export default function Navbar() {
   const { currentUser, logout } = useContext(AuthContext);
   const navigate = useNavigate();
   const location = useLocation();
   const [anchorEl, setAnchorEl] = useState(null);
-  const [adminMenuAnchor, setAdminMenuAnchor] = useState(null);
   const [scrollTrigger, setScrollTrigger] = useState(false);
-  const [adminDialogOpen, setAdminDialogOpen] = useState(false);
   
   // Agregando estados para notificaciones
   const [notificationAnchorEl, setNotificationAnchorEl] = useState(null);
@@ -126,7 +107,7 @@ export default function Navbar() {
     });
 
     return () => socket.disconnect();
-  }, [currentUser]);
+  }, [currentUser, playNotification]);
   
   const handleMenu = (event) => {
     setAnchorEl(event.currentTarget);
@@ -136,28 +117,9 @@ export default function Navbar() {
     setAnchorEl(null);
   };
 
-  const handleAdminMenu = (event) => {
-    setAdminMenuAnchor(event.currentTarget);
-  };
+  // admin menu handlers removed
 
-  const handleAdminMenuClose = () => {
-    setAdminMenuAnchor(null);
-  };
-
-  // Funciones para manejar el diálogo de administrador
-  const handleAdminDialogOpen = () => {
-    setAdminDialogOpen(true);
-    handleAdminMenuClose(); // Cerrar el menú si está abierto
-  };
-
-  const handleAdminDialogClose = () => {
-    setAdminDialogOpen(false);
-  };
-
-  const handleAdminSuccess = () => {
-    setAdminDialogOpen(false);
-    navigate('/admin-access');
-  };
+  // admin features removed
   
   const handleLogout = async () => {
     try {
@@ -191,10 +153,7 @@ export default function Navbar() {
     return location.pathname === path;
   };
 
-  // Función para verificar si estamos en una ruta de admin
-  const isAdminRoute = () => {
-    return location.pathname.includes('/admin');
-  };
+  // admin route helper removed
   
   return (
     <TransparentAppBar position="fixed">
@@ -292,14 +251,7 @@ export default function Navbar() {
                   Administracion
                 </NavButton>
               </Fade>
-              <Fade in={true} timeout={1300}>
-                <AdminButton
-                  onClick={handleAdminDialogOpen}
-                  startIcon={<AdminPanelSettingsIcon />}
-                >
-                  Administración
-                </AdminButton>
-              </Fade>
+              {/* Botón de administración eliminado */}
             </Box>
           ) : (
             /* Mostrar navegación cuando el usuario SÍ está autenticado */
@@ -387,14 +339,7 @@ export default function Navbar() {
                   )}
                 </Menu>
 
-                <Fade in={true} timeout={1200}>
-                  <AdminButton
-                    onClick={handleAdminMenu}
-                    startIcon={<AdminPanelSettingsIcon />}
-                  >
-                    Administración
-                  </AdminButton>
-                </Fade>
+                {/* Administración eliminada para usuarios autenticados */}
 
                 <Fade in={true} timeout={1400}>
                   <Button 
@@ -421,38 +366,7 @@ export default function Navbar() {
               </Box>
               
               {/* Menú desplegable para administrador */}
-              <Menu
-                anchorEl={adminMenuAnchor}
-                open={Boolean(adminMenuAnchor)}
-                onClose={handleAdminMenuClose}
-                TransitionComponent={Fade}
-                PaperProps={{
-                  sx: {
-                    bgcolor: 'rgba(0, 51, 102, 0.95)',
-                    backgroundImage: 'linear-gradient(135deg, rgba(0, 51, 102, 0.95) 0%, rgba(0, 76, 153, 0.95) 100%)',
-                    color: '#ffffff',
-                    boxShadow: '0 8px 32px rgba(0,0,0,0.3)',
-                    mt: 1,
-                    border: '1px solid rgba(255, 215, 0, 0.3)',
-                    borderRadius: '8px',
-                    backdropFilter: 'blur(8px)',
-                    minWidth: '180px',
-                  }
-                }}
-              >
-                <MenuItem 
-                  onClick={handleAdminDialogOpen}
-                  sx={{
-                    my: 0.5,
-                    mx: 1,
-                    borderRadius: '4px',
-                    '&:hover': { bgcolor: 'rgba(255, 215, 0, 0.1)' },
-                    fontWeight: 500,
-                  }}
-                >
-                  Acceso Administrativo
-                </MenuItem>
-              </Menu>
+              {/* Menu administrativo eliminado */}
               
               {/* Menú móvil para usuarios autenticados */}
               <Box sx={{ display: { xs: 'flex', md: 'none' } }}>
@@ -517,21 +431,7 @@ export default function Navbar() {
                     Inicio
                   </MenuItem>
 
-                  <MenuItem 
-                    onClick={handleAdminDialogOpen}
-                    sx={{
-                      my: 0.5,
-                      mx: 1,
-                      borderRadius: '4px',
-                      backgroundColor: isAdminRoute() ? 'rgba(255, 255, 255, 0.15)' : 'transparent',
-                      '&:hover': { bgcolor: 'rgba(255, 255, 255, 0.1)' },
-                      borderLeft: isAdminRoute() ? '4px solid #FFD700' : 'none',
-                      pl: isAdminRoute() ? 2 : 3,
-                      fontWeight: isAdminRoute() ? 600 : 400,
-                    }}
-                  >
-                    Administración
-                  </MenuItem>
+                  {/* Administración móvil eliminada */}
                   
                   <Divider sx={{ bgcolor: 'rgba(255,255,255,0.2)', my: 1 }} />
                   
@@ -558,12 +458,7 @@ export default function Navbar() {
         </Toolbar>
       </Container>
 
-      {/* Diálogo de acceso administrativo */}
-      <AdminAccessDialog 
-        open={adminDialogOpen}
-        onClose={handleAdminDialogClose}
-        onSuccess={handleAdminSuccess}
-      />
+  {/* Diálogo administrativo eliminado */}
     </TransparentAppBar>
   );
 }

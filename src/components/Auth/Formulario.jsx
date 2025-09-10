@@ -128,16 +128,32 @@ export default function Register() {
     let newValue = value;
     // Para el campo 'promedio' permitir números y punto decimal
     if (name === 'promedio') {
-      newValue = value.replace(/[^0-9.]/g, '');
+      // eliminar caracteres no válidos
+      let cleaned = value.replace(/[^0-9.]/g, '');
+      // permitir solo el primer punto
+      const parts = cleaned.split('.');
+      if (parts.length > 1) {
+        // mantener solo una cifra decimal (p. ej. 8.9) y descartar más
+        cleaned = parts[0] + '.' + parts[1].slice(0, 1);
+      }
+      newValue = cleaned;
     }
-  // Para nombre, apellidos y carrera permitir solo letras, espacios, guiones y apóstrofes
+  // Para nombre, apellidos, carrera e institución permitir solo letras, espacios, guiones y apóstrofes
   if (name === 'nombre' || name === 'apellidoPaterno' || name === 'apellidoMaterno' || name === 'carrera' || name === 'institucion') {
       // Permite letras latinas acentuadas, espacios, guion y apóstrofe
       newValue = value.replace(/[^A-Za-zÀ-ÿ\s'-]/g, '');
+      // Forzar mayúsculas en institución y carrera
+      if (name === 'institucion' || name === 'carrera') {
+        newValue = newValue.toUpperCase();
+      }
     }
-    // Para teléfonos permitir solo dígitos
+    // Para teléfonos permitir solo dígitos y limitar a 10 caracteres
     if (name === 'telefonoCasa' || name === 'telefonoCelular') {
-      newValue = value.replace(/[^0-9]/g, '');
+      newValue = value.replace(/[^0-9]/g, '').slice(0, 10);
+    }
+    // Para CURP permitir solo letras y números, convertir a mayúsculas y limitar a 18
+    if (name === 'curp') {
+      newValue = value.replace(/[^A-Za-z0-9]/g, '').toUpperCase().slice(0, 18);
     }
     setFormData({
       ...formData,
@@ -197,6 +213,22 @@ export default function Register() {
       if (!formData.apellidoMaterno || !nameRegex.test(formData.apellidoMaterno)) throw new Error('El apellido materno solo debe contener letras y espacios');
       // Validación de institución: solo letras y espacios
       if (!formData.institucion || !nameRegex.test(formData.institucion)) throw new Error('La institución solo debe contener letras y espacios');
+
+  // Validación CURP: exactamente 18 caracteres alfanuméricos
+  if (!formData.curp || formData.curp.length !== 18) throw new Error('La CURP debe tener exactamente 18 caracteres');
+  if (!/^[A-Z0-9]+$/.test(formData.curp)) throw new Error('La CURP solo debe contener letras mayúsculas y números');
+
+  // Validación teléfonos: exactamente 10 dígitos
+  if (!/^[0-9]{10}$/.test(formData.telefonoCasa)) throw new Error('El teléfono de casa debe contener exactamente 10 dígitos');
+  if (!/^[0-9]{10}$/.test(formData.telefonoCelular)) throw new Error('El teléfono celular debe contener exactamente 10 dígitos');
+
+  // Validación de correo electrónico (personal)
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!formData.correoPersonal || !emailRegex.test(formData.correoPersonal)) throw new Error('Introduce un correo personal válido');
+
+  // Validación de promedio: entero o con una sola cifra decimal (ej. 9, 9.0, 8.9) pero no 8.88
+  if (!formData.promedio) throw new Error('Introduce tu promedio');
+  if (!/^[0-9]+(?:\.[0-9])?$/.test(formData.promedio)) throw new Error('El promedio debe ser un número entero o con una sola cifra decimal (ej. 9, 9.0, 8.9)');
 
       const formDataToSend = new FormData();
       Object.keys(formData).forEach(key => {
@@ -279,6 +311,7 @@ export default function Register() {
                 onChange={handleChange}
                 required
                 helperText="18 caracteres, ejemplo: GARC800101HMCLNS09"
+                inputProps={{ maxLength: 18 }}
                 sx={{ maxWidth: 500, width: '100%' }}
               />
               <AnimatedTextField
@@ -288,7 +321,7 @@ export default function Register() {
                 onChange={handleChange}
                 required
                 type="tel"
-                inputProps={{ inputMode: 'numeric' }}
+                inputProps={{ inputMode: 'numeric', maxLength: 10 }}
                 helperText="Ejemplo: 7121234567"
                 sx={{ maxWidth: 500, width: '100%' }}
               />
@@ -299,7 +332,7 @@ export default function Register() {
                 onChange={handleChange}
                 required
                 type="tel"
-                inputProps={{ inputMode: 'numeric' }}
+                inputProps={{ inputMode: 'numeric', maxLength: 10 }}
                 helperText="Ejemplo: 7121234567"
                 sx={{ maxWidth: 500, width: '100%' }}
               />
@@ -311,6 +344,7 @@ export default function Register() {
                 required
                 type="email"
                 helperText="Ejemplo: usuario@gmail.com"
+                inputProps={{ maxLength: 254 }}
                 sx={{ maxWidth: 500, width: '100%' }}
               />
             </Box>
@@ -328,6 +362,7 @@ export default function Register() {
                 required
                 icon={<Badge />}
                 helperText="Escribe el nombre de tu institución (solo letras)"
+                inputProps={{ maxLength: 100, style: { textTransform: 'uppercase' } }}
                 sx={{ maxWidth: 500, width: '100%' }}
               />
               <AnimatedTextField
@@ -338,6 +373,7 @@ export default function Register() {
                 required
                 icon={<School />}
                 helperText="Escribe tu carrera"
+                inputProps={{ maxLength: 100, style: { textTransform: 'uppercase' } }}
                 sx={{ maxWidth: 500, width: '100%' }}
               />
               <AnimatedTextField
@@ -347,7 +383,7 @@ export default function Register() {
                 onChange={handleChange}
                 required
                 type="text"
-                inputProps={{ inputMode: 'decimal', pattern: '[0-9.]*' }}
+                inputProps={{ inputMode: 'decimal', pattern: '[0-9.]*', maxLength: 5 }}
                 helperText="Ejemplo: 8.0, 8.5, 9"
                 sx={{ maxWidth: 500, width: '100%' }}
               />
@@ -381,7 +417,7 @@ export default function Register() {
                     width: '100%'
                   }}
                 >
-                  Adjuntar documento académico (PDF, máx. 5MB)
+                  Adjuntar cv (PDF. 5MB)
                   <input
                     type="file"
                     hidden
