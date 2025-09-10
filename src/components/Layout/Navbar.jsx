@@ -152,6 +152,7 @@ export default function Navbar() {
   const isActive = (path) => {
     return location.pathname === path;
   };
+  const onAdminStructure = location.pathname.startsWith('/admin-structure');
 
   // admin route helper removed
   
@@ -257,87 +258,93 @@ export default function Navbar() {
             /* Mostrar navegación cuando el usuario SÍ está autenticado */
             <>
               <Box sx={{ display: { xs: 'none', md: 'flex' }, gap: 1 }}>
-                <Fade in={true} timeout={1000}>
-                  <NavButton 
-                    sx={{ 
-                      backgroundColor: isActive('/') ? 'rgba(255, 255, 255, 0.15)' : 'transparent',
-                      '&::after': isActive('/') ? { width: '90%', backgroundColor: '#FFD700' } : {},
-                    }}
-                    onClick={() => navigate('/')}
-                  >
-                    Inicio
-                  </NavButton>
-                </Fade>
+                {!onAdminStructure && (
+                  <Fade in={true} timeout={1000}>
+                    <NavButton 
+                      sx={{ 
+                        backgroundColor: isActive('/') ? 'rgba(255, 255, 255, 0.15)' : 'transparent',
+                        '&::after': isActive('/') ? { width: '90%', backgroundColor: '#FFD700' } : {},
+                      }}
+                      onClick={() => navigate('/')}
+                    >
+                      Inicio
+                    </NavButton>
+                  </Fade>
+                )}
 
-                {/* Botón de notificaciones */}
-                <Fade in={true} timeout={1100}>
-                  <IconButton
-                    size="large"
-                    onClick={handleNotificationMenu}
-                    sx={{ 
-                      color: '#ffffff',
-                      backgroundColor: 'rgba(255, 255, 255, 0.1)',
-                      border: '1px solid rgba(255, 255, 255, 0.2)',
-                      '&:hover': {
-                        backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                {/* Botón de notificaciones (oculto en admin-structure) */}
+                {!onAdminStructure && (
+                  <Fade in={true} timeout={1100}>
+                    <IconButton
+                      size="large"
+                      onClick={handleNotificationMenu}
+                      sx={{ 
+                        color: '#ffffff',
+                        backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                        border: '1px solid rgba(255, 255, 255, 0.2)',
+                        '&:hover': {
+                          backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                        }
+                      }}
+                    >
+                      <Badge badgeContent={unreadCount} color="error">
+                        <NotificationsIcon />
+                      </Badge>
+                    </IconButton>
+                  </Fade>
+                )}
+
+                {/* Menú de notificaciones (oculto en admin-structure) */}
+                {!onAdminStructure && (
+                  <Menu
+                    anchorEl={notificationAnchorEl}
+                    open={Boolean(notificationAnchorEl)}
+                    onClose={handleNotificationClose}
+                    PaperProps={{
+                      sx: {
+                        bgcolor: 'rgba(0, 51, 102, 0.95)',
+                        backgroundImage: 'linear-gradient(135deg, rgba(0, 51, 102, 0.95) 0%, rgba(0, 76, 153, 0.95) 100%)',
+                        color: '#ffffff',
+                        boxShadow: '0 8px 32px rgba(0,0,0,0.3)',
+                        mt: 1,
+                        border: '1px solid rgba(255, 215, 0, 0.3)',
+                        borderRadius: '8px',
+                        backdropFilter: 'blur(8px)',
+                        maxHeight: 300,
+                        width: 320,
                       }
                     }}
                   >
-                    <Badge badgeContent={unreadCount} color="error">
-                      <NotificationsIcon />
-                    </Badge>
-                  </IconButton>
-                </Fade>
-
-                {/* Menú de notificaciones */}
-                <Menu
-                  anchorEl={notificationAnchorEl}
-                  open={Boolean(notificationAnchorEl)}
-                  onClose={handleNotificationClose}
-                  PaperProps={{
-                    sx: {
-                      bgcolor: 'rgba(0, 51, 102, 0.95)',
-                      backgroundImage: 'linear-gradient(135deg, rgba(0, 51, 102, 0.95) 0%, rgba(0, 76, 153, 0.95) 100%)',
-                      color: '#ffffff',
-                      boxShadow: '0 8px 32px rgba(0,0,0,0.3)',
-                      mt: 1,
-                      border: '1px solid rgba(255, 215, 0, 0.3)',
-                      borderRadius: '8px',
-                      backdropFilter: 'blur(8px)',
-                      maxHeight: 300,
-                      width: 320,
-                    }
-                  }}
-                >
-                  {notifications.length === 0 ? (
-                    <MenuItem disabled sx={{ color: 'rgba(255, 255, 255, 0.7)' }}>
-                      No hay notificaciones
-                    </MenuItem>
-                  ) : (
-                    notifications.map((notification, index) => (
-                      <MenuItem
-                        key={index}
-                        onClick={() => handleNotificationClick(notification)}
-                        sx={{
-                          whiteSpace: 'normal',
-                          display: 'block',
-                          py: 1,
-                          '&:hover': { bgcolor: 'rgba(255, 215, 0, 0.1)' },
-                        }}
-                      >
-                        <Typography variant="subtitle2" fontWeight="bold" sx={{ color: '#FFD700' }}>
-                          {notification.title}
-                        </Typography>
-                        <Typography variant="body2">
-                          {notification.message}
-                        </Typography>
-                        <Typography variant="caption" sx={{ color: 'rgba(255, 255, 255, 0.7)' }}>
-                          {new Date(notification.timestamp).toLocaleString()}
-                        </Typography>
+                    {notifications.length === 0 ? (
+                      <MenuItem disabled sx={{ color: 'rgba(255, 255, 255, 0.7)' }}>
+                        No hay notificaciones
                       </MenuItem>
-                    ))
-                  )}
-                </Menu>
+                    ) : (
+                      notifications.map((notification, index) => (
+                        <MenuItem
+                          key={index}
+                          onClick={() => handleNotificationClick(notification)}
+                          sx={{
+                            whiteSpace: 'normal',
+                            display: 'block',
+                            py: 1,
+                            '&:hover': { bgcolor: 'rgba(255, 215, 0, 0.1)' },
+                          }}
+                        >
+                          <Typography variant="subtitle2" fontWeight="bold" sx={{ color: '#FFD700' }}>
+                            {notification.title}
+                          </Typography>
+                          <Typography variant="body2">
+                            {notification.message}
+                          </Typography>
+                          <Typography variant="caption" sx={{ color: 'rgba(255, 255, 255, 0.7)' }}>
+                            {new Date(notification.timestamp).toLocaleString()}
+                          </Typography>
+                        </MenuItem>
+                      ))
+                    )}
+                  </Menu>
+                )}
 
                 {/* Administración eliminada para usuarios autenticados */}
 
@@ -415,21 +422,23 @@ export default function Navbar() {
                     }
                   }}
                 >
-                  <MenuItem 
-                    onClick={() => { navigate('/'); handleClose(); }}
-                    sx={{
-                      my: 0.5,
-                      mx: 1,
-                      borderRadius: '4px',
-                      backgroundColor: isActive('/') ? 'rgba(255, 255, 255, 0.15)' : 'transparent',
-                      '&:hover': { bgcolor: 'rgba(255, 255, 255, 0.1)' },
-                      borderLeft: isActive('/') ? '4px solid #FFD700' : 'none',
-                      pl: isActive('/') ? 2 : 3,
-                      fontWeight: isActive('/') ? 600 : 400,
-                    }}
-                  >
-                    Inicio
-                  </MenuItem>
+                  {!onAdminStructure && (
+                    <MenuItem 
+                      onClick={() => { navigate('/'); handleClose(); }}
+                      sx={{
+                        my: 0.5,
+                        mx: 1,
+                        borderRadius: '4px',
+                        backgroundColor: isActive('/') ? 'rgba(255, 255, 255, 0.15)' : 'transparent',
+                        '&:hover': { bgcolor: 'rgba(255, 255, 255, 0.1)' },
+                        borderLeft: isActive('/') ? '4px solid #FFD700' : 'none',
+                        pl: isActive('/') ? 2 : 3,
+                        fontWeight: isActive('/') ? 600 : 400,
+                      }}
+                    >
+                      Inicio
+                    </MenuItem>
+                  )}
 
                   {/* Administración móvil eliminada */}
                   
