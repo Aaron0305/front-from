@@ -25,7 +25,6 @@ import {
     Zoom
 } from '@mui/material';
 import { 
-    Menu as MenuIcon, 
     GetApp, 
     Search as SearchIcon, 
     FileDownload,
@@ -89,7 +88,6 @@ const StatsCard = styled(Card)(() => ({
 }));
 
 export default function Structure() {
-    const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
     const [registros, setRegistros] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -592,6 +590,7 @@ export default function Structure() {
                                 <TableCell>Correo Personal</TableCell>
                                 <TableCell>Institución</TableCell>
                                 <TableCell>Carrera</TableCell>
+                                <TableCell>Grupo</TableCell>
                                 <TableCell>Promedio</TableCell>
                                 <TableCell>Estado</TableCell>
                                 <TableCell>Documentos</TableCell>
@@ -654,7 +653,9 @@ export default function Structure() {
                                             />
                                         </TableCell>
                                         <TableCell>
-                                            <Typography variant="body2">{registro.grupo || '-'}</Typography>
+                                            <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                                                {registro.grupo || '-'}
+                                            </Typography>
                                         </TableCell>
                                         <TableCell>
                                             <Box sx={{
