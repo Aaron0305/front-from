@@ -8,12 +8,14 @@ import ActiveSession from './components/dashboard/ActiveSession';
 import Structure from './components/Admin/Structure';
 import ProtectedRoute from './components/Auth/ProtectedRoute';
 import Formulario from './components/Auth/Formulario';
+import Home from './components/dashboard/Home';
 export const ROUTES = {
   LOGIN: '/login',
   REGISTER: '/register',
   FORGOT_PASSWORD: '/forgot-password',
   RESET_PASSWORD: '/reset-password',
   HOME: '/',
+  HOME_PAGE: '/home',
   AdminStructure: '/admin-structure',
   DASHBOARD: '/dashboard',
   FORMULARIO: '/formulario',
@@ -54,6 +56,8 @@ export default function Router() {
           </ProtectedRoute>
         } 
       />
+      {/* Ruta pública del Home informativo */}
+      <Route path={ROUTES.HOME_PAGE} element={<Home />} />
     </Routes>
   );
 }

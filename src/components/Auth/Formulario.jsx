@@ -1,585 +1,522 @@
 import React, { useState, useContext } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+// useNavigate removed (no usado)
 import { AuthContext } from '../../contexts/AuthContext';
 import { API_CONFIG } from '../../config/api.js';
 import {
-  TextField,
-  Button,
-  Typography,
-  Container,
-  Paper,
-  Box,
-  Alert,
-  InputAdornment,
-  CircularProgress,
-  ThemeProvider,
-  Grow,
-  Zoom,
-  Stepper,
-  Step,
-  StepLabel,
-  Grid,
-  MenuItem,
+  TextField,
+  Button,
+  Typography,
+  Container,
+  Paper,
+  Box,
+  Alert,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  InputAdornment,
+  CircularProgress,
+  ThemeProvider,
+  Grow,
+  Zoom,
+  Stepper,
+  Step,
+  StepLabel,
+  Grid,
+  MenuItem,
 } from '@mui/material';
 import {
-  Badge,
-  Person,
-  School,
-  KeyboardArrowRight,
-  KeyboardArrowLeft,
-  Save
+  Badge,
+  Person,
+  School,
+  KeyboardArrowRight,
+  KeyboardArrowLeft,
+  Save,
 } from '@mui/icons-material';
 import { theme } from '../../theme/palette';
 
-// Componente de campo de entrada animado
-const AnimatedTextField = ({ label, type, value, onChange, icon, endAdornment, select, children, ...props }) => {
-  const [focused, setFocused] = useState(false);
-  const hasIcon = Boolean(icon);
+// Mapeo de grupos y sus detalles (obligatorio, deseable, niveles)
+const GROUPS = {
+  g1: {
+    title: 'Grupo 1: Ingeniero de software, Desarrollador Full Stack (.NET/Angular)',
+    obligatorio: [
+      'NET Core, ASP.NET, y C++',
+      'HTML, CSS, JavaScript',
+      'Angular',
+      'Base de datos SQL NoSQL',
+      'Tecnología en la nube Azure o AWS',
+    ],
+    deseable: [
+      'Back End (Node, java script, Python, etc.)',
+      'Marcos de JavaScript/TypeScript',
+      'Carteras CI/CD',
+      'RESTful APIs',
+    ],
+  },
+  g2: {
+    title: 'Grupo 2: Ingeniero de software, Desarrollador Full Stack (.NET/Angular)',
+    obligatorio: [
+      'NET Core, ASP.NET, y C++',
+      'HTML, CSS, JavaScript',
+      'React',
+      'Base de datos SQL NoSQL',
+      'Tecnología en la nube Azure o AWS',
+    ],
+    deseable: [
+      'Back End (Node, java script, Python, etc.)',
+      'Marcos de JavaScript/TypeScript',
+      'Carteras CI/CD',
+      'RESTful APIs',
+    ],
+  },
+  g3: {
+    title: 'Grupo 3: Ingeniero de software, Desarrollador Full Stack (Java/Angular)',
+    obligatorio: [
+      'Java (8+) Spring Boot / Spring MVC, Seguridad Spring, Spring Data JPA',
+      'APIs: RESTful APIs, manejo de JSON/XML',
+      'JUnit, Mockito, Jest, Biblioteca React Testing',
+      'HTML5, CSS3, JavaScript (ES6+)',
+      'Angular o Vue.js',
+    ],
+    deseable: [
+      'Estibador',
+      'AWS, Azure o GCP',
+      'PostgreSQL, MySQL, Oracle',
+      'MongoDB, Redis',
+      'Postman or Swagger',
+    ],
+  },
+  g4: {
+    title: 'Grupo 4: Ingeniero de software, Desarrollador Full Stack (Java/React)',
+    obligatorio: [
+      'Java (8+) Spring Boot / Spring MVC, Seguridad Spring, Spring Data JPA',
+      'APIs: RESTful APIs, manejo de JSON/XML',
+      'JUnit, Mockito, Jest, Biblioteca React Testing',
+      'HTML5, CSS3, JavaScript (ES6+)',
+      'React.js, Redux',
+    ],
+    deseable: [
+      'Docker',
+      'AWS, Azure o GCP',
+      'PostgreSQL, MySQL, Oracle',
+      'MongoDB, Redis',
+      'Jenkins, GitHub Actions, GitLab CI',
+    ],
+  },
+  g5: {
+    title: 'Grupo 5: Ingeniero de Nube Azure',
+    obligatorio: [
+      'Servicios en la nube Azure',
+      'Kubernetes (AKS) y contenedores',
+      'Azure DevOps Pipelines y Acciones GitHub',
+      'PowerShell or Python',
+      'Formatos ARM / Procesos CI/CD',
+    ],
+    deseable: [
+      'Ansible Tower y Terraform',
+      'Azure SQL, Databricks, y otros servicios de Azure',
+      'Certificaciones AZ-104, AZ-400, CKA, CKAD (de preferencia)',
+    ],
+  },
+  g6: {
+    title: 'Grupo 6: Ingeniero de Software Python',
+    obligatorio: [
+      'Python: programación orientada a objetos',
+      'Librerías: Pandas, NumPy, SQL Connectors, Flask, Django',
+      'APIs y marcadores de language XML y JSON',
+    ],
+    deseable: [
+      'AWS',
+      'Métodos estándar y procesos ETL',
+      'Conocimiento de SQL/Postgres/MySQL y normalización',
+    ],
+  },
+};
 
-  return (
-    <Grow in={true} style={{ transformOrigin: '0 0 0' }} timeout={700}>
-      <TextField
-        label={label}
-        type={type}
-        fullWidth
-        variant="outlined"
-        value={value}
-        onChange={onChange}
-        onFocus={() => setFocused(true)}
-        onBlur={() => setFocused(false)}
-        select={select}
-        InputLabelProps={{
-          shrink: focused || Boolean(value),
-          sx: hasIcon ? { left: '44px' } : {},
-        }}
-        InputProps={{
-          startAdornment: icon && (
-            <InputAdornment position="start">
-              {icon}
-            </InputAdornment>
-          ),
-          endAdornment: endAdornment,
-          sx: {
-            '&:hover': {
-              '& .MuiOutlinedInput-notchedOutline': {
-                borderColor: theme.palette.secondary.main,
-              },
-            },
-            '&.Mui-focused': {
-              '& .MuiOutlinedInput-notchedOutline': {
-                borderColor: theme.palette.primary.main,
-                borderWidth: 2,
-              },
-            },
-            transition: 'all 0.3s ease-in-out',
-          }
-        }}
-        sx={{
-          '& label.Mui-focused': {
-            color: theme.palette.primary.main,
-          },
-          '& .MuiOutlinedInput-root': {
-            '&.Mui-focused fieldset': {
-              borderColor: theme.palette.primary.main,
-            },
-          },
-          mb: 2,
-        }}
-        {...props}
-      >
-        {children}
-      </TextField>
-    </Grow>
-  );
+const AnimatedTextField = ({ label, type, value, onChange, icon, endAdornment, select, children, ...props }) => {
+  const [focused, setFocused] = useState(false);
+  const hasIcon = Boolean(icon);
+
+  return (
+    <Grow in={true} style={{ transformOrigin: '0 0 0' }} timeout={700}>
+      <TextField
+        label={label}
+        type={type}
+        fullWidth
+        variant="outlined"
+        value={value}
+        onChange={onChange}
+        onFocus={() => setFocused(true)}
+        onBlur={() => setFocused(false)}
+        select={select}
+        InputLabelProps={{
+          shrink: focused || Boolean(value),
+          sx: hasIcon ? { left: '44px' } : {},
+        }}
+        InputProps={{
+          startAdornment: icon && (
+            <InputAdornment position="start">{icon}</InputAdornment>
+          ),
+          endAdornment: endAdornment,
+          sx: {
+            '&:hover': {
+              '& .MuiOutlinedInput-notchedOutline': {
+                borderColor: theme.palette.secondary.main,
+              },
+            },
+            '&.Mui-focused': {
+              '& .MuiOutlinedInput-notchedOutline': {
+                borderColor: theme.palette.primary.main,
+                borderWidth: 2,
+              },
+            },
+            transition: 'all 0.3s ease-in-out',
+          },
+        }}
+        sx={{
+          '& label.Mui-focused': { color: theme.palette.primary.main },
+          '& .MuiOutlinedInput-root': {
+            '&.Mui-focused fieldset': { borderColor: theme.palette.primary.main },
+          },
+          mb: 2,
+        }}
+        {...props}
+      >
+        {children}
+      </TextField>
+    </Grow>
+  );
 };
 
 export default function Register() {
-  const [activeStep, setActiveStep] = useState(0);
-  // foto no utilizada actualmente
-  const [formData, setFormData] = useState({
-    nombre: '',
-    apellidoPaterno: '',
-    apellidoMaterno: '',
-    curp: '',
-    telefonoCasa: '',
-    telefonoCelular: '',
-    correoPersonal: '',
-    correoInstitucional: '',
-  institucion: '',
-    carrera: '',
-    promedio: '',
-    estado: '', // regular o irregular
-    // account fields removed intentionally
-  });
-  const [cvPdf, setCvPdf] = useState(null);
-  const [cvError, setCvError] = useState('');
-  
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState(false);
-  const [loading, setLoading] = useState(false);
-  useContext(AuthContext);
-  const navigate = useNavigate();
+  const [activeStep, setActiveStep] = useState(0);
+  const [formData, setFormData] = useState({
+    nombre: '',
+    apellidoPaterno: '',
+    apellidoMaterno: '',
+    curp: '',
+    telefonoCasa: '',
+    telefonoCelular: '',
+    correoPersonal: '',
+    correoInstitucional: '',
+    institucion: '',
+    carrera: '',
+    promedio: '',
+    estado: '',
+    grupo: '',
+  });
 
-  // (se removió carga de carreras innecesaria)
+  const [cvPdf, setCvPdf] = useState(null);
+  const [cvError, setCvError] = useState('');
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  useContext(AuthContext);
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    // Saneamiento según campo
-    let newValue = value;
-    // Para el campo 'promedio' permitir números y punto decimal
-    if (name === 'promedio') {
-      // eliminar caracteres no válidos
-      let cleaned = value.replace(/[^0-9.]/g, '');
-      // permitir solo el primer punto
-      const parts = cleaned.split('.');
-      if (parts.length > 1) {
-        // mantener solo una cifra decimal (p. ej. 8.9) y descartar más
-        cleaned = parts[0] + '.' + parts[1].slice(0, 1);
-      }
-      newValue = cleaned;
-    }
-  // Para nombre, apellidos, carrera e institución permitir solo letras, espacios, guiones y apóstrofes
-  if (name === 'nombre' || name === 'apellidoPaterno' || name === 'apellidoMaterno' || name === 'carrera' || name === 'institucion') {
-      // Permite letras latinas acentuadas, espacios, guion y apóstrofe
-      newValue = value.replace(/[^A-Za-zÀ-ÿ\s'-]/g, '');
-      // Forzar mayúsculas en institución y carrera
-      if (name === 'institucion' || name === 'carrera') {
-        newValue = newValue.toUpperCase();
-      }
-    }
-    // Para teléfonos permitir solo dígitos y limitar a 10 caracteres
-    if (name === 'telefonoCasa' || name === 'telefonoCelular') {
-      newValue = value.replace(/[^0-9]/g, '').slice(0, 10);
-    }
-    // Para CURP permitir solo letras y números, convertir a mayúsculas y limitar a 18
-    if (name === 'curp') {
-      newValue = value.replace(/[^A-Za-z0-9]/g, '').toUpperCase().slice(0, 18);
-    }
-    setFormData({
-      ...formData,
-      [name]: newValue
-    });
-    setError('');
-  };
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    let newValue = value;
 
-  // (se removió verificación de email de cuenta)
+    if (name === 'promedio') {
+      let cleaned = value.replace(/[^0-9.]/g, '');
+      const parts = cleaned.split('.');
+      if (parts.length > 1) {
+        cleaned = parts[0] + '.' + parts[1].slice(0, 1);
+      }
+      newValue = cleaned;
+    }
 
-  // (verificación de número de control removida si no se usa en UI)
+    if (
+      name === 'nombre' ||
+      name === 'apellidoPaterno' ||
+      name === 'apellidoMaterno' ||
+      name === 'carrera' ||
+      name === 'institucion'
+    ) {
+      newValue = value.replace(/[^A-Za-zÀ-ÿ\s'-]/g, '');
+      if (name === 'institucion' || name === 'carrera') {
+        newValue = newValue.toUpperCase();
+      }
+    }
 
-  // (manejo de foto simplificado — guardamos archivo si se provee)
-  // Nota: la carga de foto se mantiene pero el input no está en el formulario actual.
+    if (name === 'telefonoCasa' || name === 'telefonoCelular') {
+      newValue = value.replace(/[^0-9]/g, '').slice(0, 10);
+    }
 
-  // Manejo de carga de PDF académico
-  const handleCvChange = (event) => {
-    const file = event.target.files && event.target.files[0];
-    if (!file) return;
-    if (file.type !== 'application/pdf') {
-      setCvError('Solo se permiten archivos PDF');
-      setCvPdf(null);
-      return;
-    }
-    if (file.size > 5 * 1024 * 1024) {
-      setCvError('El archivo no debe superar los 5MB');
-      setCvPdf(null);
-      return;
-    }
-    setCvPdf(file);
-    setCvError('');
-  };
+    if (name === 'curp') {
+      newValue = value.replace(/[^A-Za-z0-9]/g, '').toUpperCase().slice(0, 18);
+    }
 
-  const handleNext = () => {
-    setActiveStep((prevStep) => prevStep + 1);
-  };
+    setFormData({ ...formData, [name]: newValue });
+    setError('');
+  };
 
-  const handleBack = () => {
-    setActiveStep((prevStep) => prevStep - 1);
-  };
+  const handleCvChange = (event) => {
+    const file = event.target.files && event.target.files[0];
+    if (!file) return;
+    if (file.type !== 'application/pdf') {
+      setCvError('Solo se permiten archivos PDF');
+      setCvPdf(null);
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      setCvError('El archivo no debe superar los 5MB');
+      setCvPdf(null);
+      return;
+    }
+    setCvPdf(file);
+    setCvError('');
+  };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (activeStep !== steps.length - 1) {
-      handleNext();
-      return;
-    }
-    
-    setLoading(true);
-    setError('');
-    
-    try {
-      // Validaciones de nombres: solo letras y espacios
-      const nameRegex = /^[A-Za-zÀ-ÿ\s'-]+$/;
-      if (!formData.nombre || !nameRegex.test(formData.nombre)) throw new Error('El nombre solo debe contener letras y espacios');
-      if (!formData.apellidoPaterno || !nameRegex.test(formData.apellidoPaterno)) throw new Error('El apellido paterno solo debe contener letras y espacios');
-      if (!formData.apellidoMaterno || !nameRegex.test(formData.apellidoMaterno)) throw new Error('El apellido materno solo debe contener letras y espacios');
-      // Validación de institución: solo letras y espacios
-      if (!formData.institucion || !nameRegex.test(formData.institucion)) throw new Error('La institución solo debe contener letras y espacios');
+  const handleNext = () => setActiveStep((s) => s + 1);
+  const handleBack = () => setActiveStep((s) => s - 1);
 
-  // Validación CURP: exactamente 18 caracteres alfanuméricos
-  if (!formData.curp || formData.curp.length !== 18) throw new Error('La CURP debe tener exactamente 18 caracteres');
-  if (!/^[A-Z0-9]+$/.test(formData.curp)) throw new Error('La CURP solo debe contener letras mayúsculas y números');
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (activeStep !== steps.length - 1) {
+      handleNext();
+      return;
+    }
+    // Abrir diálogo de confirmación en vez de enviar inmediatamente
+    setConfirmOpen(true);
+  };
 
-  // Validación teléfonos: exactamente 10 dígitos
-  if (!/^[0-9]{10}$/.test(formData.telefonoCasa)) throw new Error('El teléfono de casa debe contener exactamente 10 dígitos');
-  if (!/^[0-9]{10}$/.test(formData.telefonoCelular)) throw new Error('El teléfono celular debe contener exactamente 10 dígitos');
+  // lógica real de envío extraída para llamarla después de la confirmación
+  const doSubmit = async () => {
+    setConfirmOpen(false);
+    setLoading(true);
+    setError('');
+    try {
+      const nameRegex = /^[A-Za-zÀ-ÿ\s'-]+$/;
+      if (!formData.nombre || !nameRegex.test(formData.nombre)) throw new Error('El nombre solo debe contener letras y espacios');
+      if (!formData.apellidoPaterno || !nameRegex.test(formData.apellidoPaterno)) throw new Error('El apellido paterno solo debe contener letras y espacios');
+      if (!formData.apellidoMaterno || !nameRegex.test(formData.apellidoMaterno)) throw new Error('El apellido materno solo debe contener letras y espacios');
+      if (!formData.institucion || !nameRegex.test(formData.institucion)) throw new Error('La institución solo debe contener letras y espacios');
 
-  // Validación de correo electrónico (personal)
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  if (!formData.correoPersonal || !emailRegex.test(formData.correoPersonal)) throw new Error('Introduce un correo personal válido');
+      if (!formData.curp || formData.curp.length !== 18) throw new Error('La CURP debe tener exactamente 18 caracteres');
+      if (!/^[A-Z0-9]+$/.test(formData.curp)) throw new Error('La CURP solo debe contener letras mayúsculas y números');
 
-  // Validación de promedio: entero o con una sola cifra decimal (ej. 9, 9.0, 8.9) pero no 8.88
-  if (!formData.promedio) throw new Error('Introduce tu promedio');
-  if (!/^[0-9]+(?:\.[0-9])?$/.test(formData.promedio)) throw new Error('El promedio debe ser un número entero o con una sola cifra decimal (ej. 9, 9.0, 8.9)');
+      if (!/^[0-9]{10}$/.test(formData.telefonoCasa)) throw new Error('El teléfono de casa debe contener exactamente 10 dígitos');
+      if (!/^[0-9]{10}$/.test(formData.telefonoCelular)) throw new Error('El teléfono celular debe contener exactamente 10 dígitos');
 
-      const formDataToSend = new FormData();
-      Object.keys(formData).forEach(key => {
-        formDataToSend.append(key, formData[key]);
-      });
-      if (cvPdf) {
-        formDataToSend.append('pdf', cvPdf);
-      }
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!formData.correoPersonal || !emailRegex.test(formData.correoPersonal)) throw new Error('Introduce un correo personal válido');
 
-      // Enviar el formulario al endpoint correcto
-      const response = await fetch(API_CONFIG.FORMULATION_URL, {
-        method: 'POST',
-        body: formDataToSend,
-        // No incluir Content-Type header para FormData
-      });
+      if (!formData.promedio) throw new Error('Introduce tu promedio');
+      if (!/^[0-9]+(?:\.[0-9])?$/.test(formData.promedio)) throw new Error('El promedio debe ser un número entero o con una sola cifra decimal (ej. 9, 9.0, 8.9)');
 
-      if (!response.ok) {
-        let errorMessage = 'Error en el registro';
-        try {
-          const errorData = await response.json();
-          errorMessage = errorData.error || errorMessage;
-        } catch {
-          // Si no se puede parsear el JSON, usar el status text
-          errorMessage = `Error ${response.status}: ${response.statusText}`;
-        }
-        throw new Error(errorMessage);
-      }
+      const fd = new FormData();
+      Object.keys(formData).forEach((k) => fd.append(k, formData[k]));
+      if (cvPdf) fd.append('pdf', cvPdf);
 
-      const result = await response.json();
-      console.log('Registro exitoso:', result);
-      setSuccess(true);
-      
-      // ***** CAMBIO REALIZADO AQUÍ *****
-      // Muestra el mensaje de éxito y después de 1.5 segundos, recarga la página.
-      setTimeout(() => {
-        window.location.reload();
-      }, 1500);
+      const response = await fetch(API_CONFIG.FORMULATION_URL, { method: 'POST', body: fd });
+      if (!response.ok) {
+        let errorMessage = 'Error en el registro';
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.error || errorMessage;
+        } catch {
+          errorMessage = `Error ${response.status}: ${response.statusText}`;
+        }
+        throw new Error(errorMessage);
+      }
 
-    } catch (err) {
-      console.error('Error al registrar:', err);
-      setError(err.message || 'Error al registrar usuario');
-    } finally {
-      setLoading(false);
-    }
-  };
+      await response.json();
+      setSuccess(true);
+      setTimeout(() => window.location.reload(), 1500);
+    } catch (err) {
+      setError(err.message || 'Error al registrar usuario');
+    } finally {
+      setLoading(false);
+    }
+  };
 
-  const steps = ['Información Personal', 'Información Académica'];
+  const steps = ['Información Personal', 'Información Académica'];
 
-  const renderStepContent = (step) => {
-    switch (step) {
-      case 0:
-        return (
-          <Box sx={{ mt: 2, width: '100%' }}>
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, alignItems: 'center' }}>
-              <AnimatedTextField
-                label="Nombre(s)"
-                name="nombre"
-                value={formData.nombre}
-                onChange={handleChange}
-                required
-                icon={<Person />}
-                sx={{ maxWidth: 500, width: '100%' }}
-              />
-              <AnimatedTextField
-                label="Apellido paterno"
-                name="apellidoPaterno"
-                value={formData.apellidoPaterno}
-                onChange={handleChange}
-                required
-                icon={<Person />}
-                sx={{ maxWidth: 500, width: '100%' }}
-              />
-              <AnimatedTextField
-                label="Apellido materno"
-                name="apellidoMaterno"
-                value={formData.apellidoMaterno}
-                onChange={handleChange}
-                required
-                icon={<Person />}
-                sx={{ maxWidth: 500, width: '100%' }}
-              />
-              <AnimatedTextField
-                label="CURP"
-                name="curp"
-                value={formData.curp}
-                onChange={handleChange}
-                required
-                helperText="18 caracteres, ejemplo: GARC800101HMCLNS09"
-                inputProps={{ maxLength: 18 }}
-                sx={{ maxWidth: 500, width: '100%' }}
-              />
-              <AnimatedTextField
-                label="Teléfono de casa"
-                name="telefonoCasa"
-                value={formData.telefonoCasa}
-                onChange={handleChange}
-                required
-                type="tel"
-                inputProps={{ inputMode: 'numeric', maxLength: 10 }}
-                helperText="Ejemplo: 7121234567"
-                sx={{ maxWidth: 500, width: '100%' }}
-              />
-              <AnimatedTextField
-                label="Teléfono celular"
-                name="telefonoCelular"
-                value={formData.telefonoCelular}
-                onChange={handleChange}
-                required
-                type="tel"
-                inputProps={{ inputMode: 'numeric', maxLength: 10 }}
-                helperText="Ejemplo: 7121234567"
-                sx={{ maxWidth: 500, width: '100%' }}
-              />
-              <AnimatedTextField
-                label="Correo personal"
-                name="correoPersonal"
-                value={formData.correoPersonal}
-                onChange={handleChange}
-                required
-                type="email"
-                helperText="Ejemplo: usuario@gmail.com"
-                inputProps={{ maxLength: 254 }}
-                sx={{ maxWidth: 500, width: '100%' }}
-              />
-            </Box>
-          </Box>
-        );
-      case 1:
-        return (
-          <Box sx={{ mt: 2, width: '100%' }}>
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, alignItems: 'center' }}>
-              <AnimatedTextField
-                label="Institución"
-                name="institucion"
-                value={formData.institucion}
-                onChange={handleChange}
-                required
-                icon={<Badge />}
-                helperText="Escribe el nombre de tu institución (solo letras)"
-                inputProps={{ maxLength: 100, style: { textTransform: 'uppercase' } }}
-                sx={{ maxWidth: 500, width: '100%' }}
-              />
-              <AnimatedTextField
-                label="Carrera"
-                name="carrera"
-                value={formData.carrera}
-                onChange={handleChange}
-                required
-                icon={<School />}
-                helperText="Escribe tu carrera"
-                inputProps={{ maxLength: 100, style: { textTransform: 'uppercase' } }}
-                sx={{ maxWidth: 500, width: '100%' }}
-              />
-              <AnimatedTextField
-                label="Promedio general"
-                name="promedio"
-                value={formData.promedio}
-                onChange={handleChange}
-                required
-                type="text"
-                inputProps={{ inputMode: 'decimal', pattern: '[0-9.]*', maxLength: 5 }}
-                helperText="Ejemplo: 8.0, 8.5, 9"
-                sx={{ maxWidth: 500, width: '100%' }}
-              />
-              <AnimatedTextField
-                label="Estado académico"
-                name="estado"
-                value={formData.estado}
-                onChange={handleChange}
-                required
-                select
-                icon={<School />}
-                sx={{ maxWidth: 500, width: '100%' }}
-              >
-                <MenuItem value="">Selecciona estado</MenuItem>
-                <MenuItem value="regular">Regular</MenuItem>
-                <MenuItem value="irregular">Irregular</MenuItem>
-              </AnimatedTextField>
+  const renderStepContent = (step) => {
+    switch (step) {
+      case 0:
+        return (
+          <Box sx={{ mt: 2, width: '100%' }}>
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, alignItems: 'center' }}>
+              <AnimatedTextField label="Nombre(s)" name="nombre" value={formData.nombre} onChange={handleChange} required icon={<Person />} sx={{ maxWidth: 500, width: '100%' }} />
+              <AnimatedTextField label="Apellido paterno" name="apellidoPaterno" value={formData.apellidoPaterno} onChange={handleChange} required icon={<Person />} sx={{ maxWidth: 500, width: '100%' }} />
+              <AnimatedTextField label="Apellido materno" name="apellidoMaterno" value={formData.apellidoMaterno} onChange={handleChange} required icon={<Person />} sx={{ maxWidth: 500, width: '100%' }} />
+              <AnimatedTextField label="CURP" name="curp" value={formData.curp} onChange={handleChange} required helperText="18 caracteres, ejemplo: GARC800101HMCLNS09" inputProps={{ maxLength: 18 }} sx={{ maxWidth: 500, width: '100%' }} />
+              <AnimatedTextField label="Teléfono de casa" name="telefonoCasa" value={formData.telefonoCasa} onChange={handleChange} required type="tel" inputProps={{ inputMode: 'numeric', maxLength: 10 }} helperText="Ejemplo: 7121234567" sx={{ maxWidth: 500, width: '100%' }} />
+              <AnimatedTextField label="Teléfono celular" name="telefonoCelular" value={formData.telefonoCelular} onChange={handleChange} required type="tel" inputProps={{ inputMode: 'numeric', maxLength: 10 }} helperText="Ejemplo: 7121234567" sx={{ maxWidth: 500, width: '100%' }} />
+              <AnimatedTextField label="Correo personal" name="correoPersonal" value={formData.correoPersonal} onChange={handleChange} required type="email" helperText="Ejemplo: usuario@gmail.com" inputProps={{ maxLength: 254 }} sx={{ maxWidth: 500, width: '100%' }} />
+            </Box>
+          </Box>
+        );
 
-              <Box sx={{ mt: 2, textAlign: 'center', maxWidth: 500, width: '100%' }}>
-                  <Button
-                          variant="outlined"
-                          component="label"
-                          color={cvError ? 'error' : 'primary'}
-                          sx={{ 
-                              mb: 1,
-                              px: 4,
-                              py: 1.5,
-                              fontSize: '1rem',
-                              borderRadius: 2,
-                              textTransform: 'none',
-                              width: '100%'
-                          }}
-                      >
-                          Adjuntar CV (PDF, máx 5MB)
-                          <input
-                              type="file"
-                              hidden
-                              accept="application/pdf"
-                              onChange={handleCvChange}
-                          />
-                      </Button>
+      case 1:
+        return (
+          <Box sx={{ mt: 2, width: '100%' }}>
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, alignItems: 'center' }}>
+              <AnimatedTextField label="Institución" name="institucion" value={formData.institucion} onChange={handleChange} required icon={<Badge />} helperText="Escribe el nombre de tu institución (solo letras)" inputProps={{ maxLength: 100, style: { textTransform: 'uppercase' } }} sx={{ maxWidth: 500, width: '100%' }} />
+              <AnimatedTextField label="Carrera" name="carrera" value={formData.carrera} onChange={handleChange} required icon={<School />} helperText="Escribe tu carrera" inputProps={{ maxLength: 100, style: { textTransform: 'uppercase' } }} sx={{ maxWidth: 500, width: '100%' }} />
+              <AnimatedTextField label="Promedio general" name="promedio" value={formData.promedio} onChange={handleChange} required type="text" inputProps={{ inputMode: 'decimal', pattern: '[0-9.]*', maxLength: 5 }} helperText="Ejemplo: 8.0, 8.5, 9" sx={{ maxWidth: 500, width: '100%' }} />
+              <AnimatedTextField label="Estado académico" name="estado" value={formData.estado} onChange={handleChange} required select icon={<School />} sx={{ maxWidth: 500, width: '100%' }}>
+                <MenuItem value="">Selecciona estado</MenuItem>
+                <MenuItem value="regular">Regular</MenuItem>
+                <MenuItem value="irregular">Irregular</MenuItem>
+              </AnimatedTextField>
 
-                      {/* --- INICIO DE LA MODIFICACIÓN --- */}
+              <Box sx={{ mt: 2, textAlign: 'center', maxWidth: 500, width: '100%' }}>
+                <Button variant="outlined" component="label" color={cvError ? 'error' : 'primary'} sx={{ mb: 1, px: 4, py: 1.5, fontSize: '1rem', borderRadius: 2, textTransform: 'none', width: '100%' }}>
+                  Adjuntar CV (PDF, máx 5MB)
+                  <input type="file" hidden accept="application/pdf" onChange={handleCvChange} />
+                </Button>
 
-                      {/* Se muestra solo si NO hay un archivo seleccionado */}
-                      {!cvPdf && (
-                          <Typography variant="caption" sx={{ mt: 1, color: 'text.secondary' }}>
-                              La subida del archivo es opcional.
-                          </Typography>
-                      )}
+                {!cvPdf && (
+                  <Typography variant="caption" sx={{ mt: 1, color: 'text.secondary' }}>
+                    La subida del archivo es opcional.
+                  </Typography>
+                )}
 
-                      {/* Se muestra solo si SÍ hay un archivo seleccionado */}
-                      {cvPdf && (
-                          <Typography variant="body2" sx={{ mt: 1, color: 'success.main' }}>
-                              Archivo seleccionado: {cvPdf.name}
-                          </Typography>
-                      )}
-                {cvError && (
-                  <Alert severity="error" sx={{ mt: 1 }}>{cvError}</Alert>
-                )}
-              </Box>
-            </Box>
-          </Box>
-        );
-      default:
-        return null;
-    }
-  };
+                {cvPdf && (
+                  <Typography variant="body2" sx={{ mt: 1, color: 'success.main' }}>
+                    Archivo seleccionado: {cvPdf.name}
+                  </Typography>
+                )}
 
-  return (
-    <ThemeProvider theme={theme}>
-      <Container maxWidth={false} disableGutters sx={{ py: 4, px: 0, minWidth: '100vw', bgcolor: '#f5f6fa', mt: { xs: 8, md: 8 } }}>
-        <Zoom in={true} style={{ transitionDelay: '100ms' }}>
-          <Paper
-            elevation={8}
-            sx={{
-              borderRadius: 0,
-              overflow: 'visible',
-              backgroundColor: 'background.paper',
-              width: '100vw',
-              maxWidth: '100vw',
-              margin: 0,
-              boxShadow: '0 8px 32px rgba(0,0,0,0.10)',
-            }}
-          >
-            <Box
-              sx={{
-                p: 4,
-                bgcolor: theme.palette.primary.main,
-                color: 'white',
-                textAlign: 'center',
-                borderTopLeftRadius: 0,
-                borderTopRightRadius: 0,
-              }}
-            >
-              <Typography variant="h4" gutterBottom fontWeight="bold" sx={{ letterSpacing: 1 }}>
-                Registro de Candidatos
-              </Typography>
-              <Typography variant="subtitle1" sx={{ fontSize: '1.1rem', opacity: 0.95 }}>
-                Completa el Formulario para Finalizar tu Registro
-              </Typography>
-            </Box>
+                {cvError && <Alert severity="error" sx={{ mt: 1 }}>{cvError}</Alert>}
 
-            <Box sx={{ width: '100%', p: 5, pt: 3, maxWidth: '1600px', margin: '0 auto' }}>
-              <Stepper activeStep={activeStep} alternativeLabel sx={{ mb: 4 }}>
-                {steps.map((label) => (
-                  <Step key={label}>
-                    <StepLabel sx={{ fontSize: '1.1rem' }}>{label}</StepLabel>
-                  </Step>
-                ))}
-              </Stepper>
+                <AnimatedTextField label="Seleccione un grupo" name="grupo" value={formData.grupo} onChange={handleChange} select sx={{ mt: 2, maxWidth: 500, width: '100%' }}>
+                  <MenuItem value="">Selecciona un grupo</MenuItem>
+                  <MenuItem value="g1">Grupo 1: Ingeniero de software, Desarrollador Full Stack (.NET/Angular)</MenuItem>
+                  <MenuItem value="g2">Grupo 2: Ingeniero de software, Desarrollador Full Stack (.NET/Angular)</MenuItem>
+                  <MenuItem value="g3">Grupo 3: Ingeniero de software, Desarrollador Full Stack (Java/Angular)</MenuItem>
+                  <MenuItem value="g4">Grupo 4: Ingeniero de software, Desarrollador Full Stack (Java/React)</MenuItem>
+                  <MenuItem value="g5">Grupo 5: Ingeniero de Nube Azure</MenuItem>
+                  <MenuItem value="g6">Grupo 6: Ingeniero de Software Python</MenuItem>
+                </AnimatedTextField>
 
-              <Box component="form" onSubmit={handleSubmit} sx={{ mt: 2 }}>
-                {renderStepContent(activeStep)}
+                {/* Render dinámico de detalles según el grupo seleccionado */}
+                {formData.grupo && GROUPS[formData.grupo] && (
+                  <Box sx={{ mt: 3, bgcolor: '#e9e9ea', p: 2, borderRadius: 1, maxWidth: 780, width: '100%', textAlign: 'left' }}>
+                    <Typography variant="subtitle1" fontWeight="bold" sx={{ mb: 1 }}>{GROUPS[formData.grupo].title}</Typography>
+                    <Grid container spacing={1} sx={{ bgcolor: '#f3f3f4', p: 2 }}>
+                      <Grid item xs={5}>
+                        <Typography variant="subtitle2" fontWeight="bold">Obligatorio</Typography>
+                        {GROUPS[formData.grupo].obligatorio.map((t, i) => (
+                          <Typography key={i} variant="body2">{t}</Typography>
+                        ))}
+                      </Grid>
+                      <Grid item xs={4}>
+                        <Typography variant="subtitle2" fontWeight="bold">Deseable</Typography>
+                        {GROUPS[formData.grupo].deseable.map((t, i) => (
+                          <Typography key={i} variant="body2">{t}</Typography>
+                        ))}
+                      </Grid>
+                      <Grid item xs={3}>
+                        <Typography variant="subtitle2" fontWeight="bold">Niveles</Typography>
+                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+                          <Typography variant="body2"><strong>Nuevo ingreso</strong> — 0 Recién graduado</Typography>
+                          <Typography variant="body2"><strong>Junior</strong> — 1 a 3</Typography>
+                          <Typography variant="body2"><strong>Intermedio</strong> — 3 a 5</Typography>
+                          <Typography variant="body2"><strong>Experto</strong> — 5 a 10</Typography>
+                          <Typography variant="body2"><strong>Líder</strong> — +10</Typography>
+                        </Box>
+                      </Grid>
+                    </Grid>
+                  </Box>
+                )}
+              </Box>
+            </Box>
+          </Box>
+        );
+      default:
+        return null;
+    }
+  };
 
-                {error && (
-                  <Grow in={!!error} timeout={500}>
-                    <Alert
-                      severity="error"
-                      variant="filled"
-                      sx={{ mt: 2, fontSize: '1rem' }}
-                    >
-                      {error}
-                    </Alert>
-                  </Grow>
-                )}
+  return (
+    <ThemeProvider theme={theme}>
+      <Container maxWidth={false} disableGutters sx={{ py: 4, px: 0, minWidth: '100vw', bgcolor: '#f5f6fa', mt: { xs: 8, md: 8 } }}>
+        <Zoom in={true} style={{ transitionDelay: '100ms' }}>
+          <Paper elevation={8} sx={{ borderRadius: 0, overflow: 'visible', backgroundColor: 'background.paper', width: '100vw', maxWidth: '100vw', margin: 0, boxShadow: '0 8px 32px rgba(0,0,0,0.10)' }}>
+            <Box sx={{ p: 4, bgcolor: theme.palette.primary.main, color: 'white', textAlign: 'center', borderTopLeftRadius: 0, borderTopRightRadius: 0 }}>
+              <Typography variant="h4" gutterBottom fontWeight="bold" sx={{ letterSpacing: 1 }}>
+                Registro de Candidatos
+              </Typography>
+              <Typography variant="subtitle1" sx={{ fontSize: '1.1rem', opacity: 0.95 }}>
+                Completa el Formulario para Finalizar tu Registro
+              </Typography>
+            </Box>
 
-                {success && (
-                  <Grow in={success} timeout={500}>
-                    <Alert
-                      severity="success"
-                      variant="filled"
-                      sx={{ mt: 2, fontSize: '1rem' }}
-                    >
-                      ¡Registro guardado exitosamente! La página se recargará...
-                    </Alert>
-                  </Grow>
-                )}
-                {/* Mostrar datos en forma de lista profesional al registrar */}
-                {success && (
-                  <Box sx={{ mt: 4, mb: 2 }}>
-                    <Typography variant="h6" fontWeight="bold" sx={{ mb: 2 }}>
-                      Datos registrados:
-                    </Typography>
-                    <Box component="ul" sx={{ listStyle: 'none', p: 0, m: 0 }}>
-                      <li><strong>Nombre:</strong> {formData.nombre}</li>
-                      <li><strong>Apellido paterno:</strong> {formData.apellidoPaterno}</li>
-                      <li><strong>Apellido materno:</strong> {formData.apellidoMaterno}</li>
-                      <li><strong>CURP:</strong> {formData.curp}</li>
-                      <li><strong>Teléfono de casa:</strong> {formData.telefonoCasa}</li>
-                      <li><strong>Teléfono celular:</strong> {formData.telefonoCelular}</li>
-                      <li><strong>Correo personal:</strong> {formData.correoPersonal}</li>
-                      <li><strong>Institución:</strong> {formData.institucion}</li>
-                      <li><strong>Carrera:</strong> {formData.carrera}</li>
-                      <li><strong>Promedio general:</strong> {formData.promedio}</li>
-                      <li><strong>Estado académico:</strong> {formData.estado === 'regular' ? 'Regular' : 'Irregular'}</li>
-                    </Box>
-                  </Box>
-                )}
+            <Box sx={{ width: '100%', p: 5, pt: 3, maxWidth: '1600px', margin: '0 auto' }}>
+              <Stepper activeStep={activeStep} alternativeLabel sx={{ mb: 4 }}>
+                {steps.map((label) => (
+                  <Step key={label}>
+                    <StepLabel sx={{ fontSize: '1.1rem' }}>{label}</StepLabel>
+                  </Step>
+                ))}
+              </Stepper>
 
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 5 }}>
-                  <Button
-                    disabled={activeStep === 0}
-                    onClick={handleBack}
-                    startIcon={<KeyboardArrowLeft />}
-                    sx={{ px: 4, py: 1.5, fontSize: '1rem', borderRadius: 2, boxShadow: 'none' }}
-                  >
-                    Anterior
-                  </Button>
-                  <Button
-                    variant="contained"
-                    onClick={handleSubmit}
-                    endIcon={activeStep === steps.length - 1 ? <Save /> : <KeyboardArrowRight />}
-                    disabled={loading}
-                    sx={{ px: 4, py: 1.5, fontSize: '1rem', borderRadius: 2, boxShadow: 'none' }}
-                  >
-                    {loading ? (
-                      <CircularProgress size={24} sx={{ color: '#fff' }} />
-                    ) : activeStep === steps.length - 1 ? (
-                      'Registrarse'
-                    ) : (
-                      'Siguiente'
-                    )}
-                  </Button>
-                </Box>
-              </Box>
-            </Box>
-          </Paper>
-        </Zoom>
-      </Container>
-    </ThemeProvider>
-  );
+              <Box component="form" onSubmit={handleSubmit} sx={{ mt: 2 }}>
+                {renderStepContent(activeStep)}
+
+                {error && (
+                  <Grow in={!!error} timeout={500}>
+                    <Alert severity="error" variant="filled" sx={{ mt: 2, fontSize: '1rem' }}>{error}</Alert>
+                  </Grow>
+                )}
+
+                {success && (
+                  <Grow in={success} timeout={500}>
+                    <Alert severity="success" variant="filled" sx={{ mt: 2, fontSize: '1rem' }}>
+                      ¡Registro guardado exitosamente! La página se recargará...
+                    </Alert>
+                  </Grow>
+                )}
+
+                {success && (
+                  <Box sx={{ mt: 4, mb: 2 }}>
+                    <Typography variant="h6" fontWeight="bold" sx={{ mb: 2 }}>Datos registrados:</Typography>
+                    <Box component="ul" sx={{ listStyle: 'none', p: 0, m: 0 }}>
+                      <li><strong>Nombre:</strong> {formData.nombre}</li>
+                      <li><strong>Apellido paterno:</strong> {formData.apellidoPaterno}</li>
+                      <li><strong>Apellido materno:</strong> {formData.apellidoMaterno}</li>
+                      <li><strong>CURP:</strong> {formData.curp}</li>
+                      <li><strong>Teléfono de casa:</strong> {formData.telefonoCasa}</li>
+                      <li><strong>Teléfono celular:</strong> {formData.telefonoCelular}</li>
+                      <li><strong>Correo personal:</strong> {formData.correoPersonal}</li>
+                      <li><strong>Institución:</strong> {formData.institucion}</li>
+                      <li><strong>Carrera:</strong> {formData.carrera}</li>
+                      <li><strong>Promedio general:</strong> {formData.promedio}</li>
+                      <li><strong>Estado académico:</strong> {formData.estado === 'regular' ? 'Regular' : 'Irregular'}</li>
+                      <li><strong>Grupo:</strong> {formData.grupo}</li>
+                    </Box>
+                  </Box>
+                )}
+
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 5 }}>
+                  <Button disabled={activeStep === 0} onClick={handleBack} startIcon={<KeyboardArrowLeft />} sx={{ px: 4, py: 1.5, fontSize: '1rem', borderRadius: 2, boxShadow: 'none' }}>Anterior</Button>
+                  <Button variant="contained" onClick={handleSubmit} endIcon={activeStep === steps.length - 1 ? <Save /> : <KeyboardArrowRight />} disabled={loading} sx={{ px: 4, py: 1.5, fontSize: '1rem', borderRadius: 2, boxShadow: 'none' }}>
+                    {loading ? <CircularProgress size={24} sx={{ color: '#fff' }} /> : activeStep === steps.length - 1 ? 'Registrarse' : 'Siguiente'}
+                  </Button>
+                </Box>
+              </Box>
+            </Box>
+          </Paper>
+        </Zoom>
+        </Container>
+
+        {/* Dialog de confirmación */}
+        <Dialog open={confirmOpen} onClose={() => setConfirmOpen(false)}>
+          <DialogTitle>Confirmar envío</DialogTitle>
+          <DialogContent>
+            <Typography>¿Estás seguro que deseas guardar el formulario?</Typography>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setConfirmOpen(false)}>No</Button>
+            <Button onClick={doSubmit} variant="contained">Sí</Button>
+          </DialogActions>
+        </Dialog>
+
+      </ThemeProvider>
+    );
 }

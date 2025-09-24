@@ -13,10 +13,11 @@ import { theme } from './theme/palette';
 import AdminAccessDialog from './components/Admin/AdminAccessDialog';
 import Structure from './components/Admin/Structure';
 import Formulario from './components/Auth/Formulario';
+import Home from './components/dashboard/Home';
 
 const PrivateRoute = ({ children }) => {
   const token = localStorage.getItem('token');
-  return token ? children : <Navigate to="/Formulario" />;
+  return token ? children : <Navigate to="/home" />;
 };
 
 function App() {
@@ -30,6 +31,7 @@ function App() {
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
             <Route path="/formulario" element={<Formulario />} />
+            <Route path="/home" element={<Home />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/reset-password" element={<ResetPassword />} />
             <Route path='/admin-access' element={<AdminAccessDialog />} />

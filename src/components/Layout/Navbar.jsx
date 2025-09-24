@@ -24,7 +24,6 @@ import notificationSound from '../../assets/notification.mp3';
 import { styled } from '@mui/material/styles';
 
 // Importamos la imagen directamente para asegurarnos que se cargue correctamente
-import tesjoLogo from '../image/tesjo.png';
 
 // Estilo personalizado para el AppBar con transición - paleta institucional mejorada
 const TransparentAppBar = styled(AppBar)(() => ({
@@ -179,16 +178,6 @@ export default function Navbar() {
                   zIndex: -1
                 }
               }}>
-                <img 
-                  src={tesjoLogo}
-                  alt="Logo TESJo" 
-                  style={{ 
-                    height: '70px', 
-                    transition: 'all 0.4s ease',
-                    transform: scrollTrigger ? 'scale(0.9)' : 'scale(1)',
-                    filter: 'drop-shadow(0 4px 6px rgba(0, 0, 0, 0.2))'
-                  }} 
-                />
               </Box>
               
               <Box sx={{ 
