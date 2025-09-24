@@ -335,36 +335,6 @@ export default function Login() {
 
               <Fade in={true} style={{ transitionDelay: '900ms' }}>
                 <Box sx={{ textAlign: 'center', mt: 4 }}>
-                  <Typography variant="body1">
-                    ¿No tienes cuenta?{' '}
-                    <Link to="/register" style={{ textDecoration: 'none' }}>
-                      <Typography 
-                        component="span" 
-                        fontWeight="bold" 
-                        sx={{ 
-                          color: '#041c6c',
-                          position: 'relative',
-                          '&:hover': {
-                            '&::after': {
-                              width: '100%',
-                            }
-                          },
-                          '&::after': {
-                            content: '""',
-                            position: 'absolute',
-                            bottom: '-2px',
-                            left: 0,
-                            width: '0%',
-                            height: '2px',
-                            backgroundColor: '#041c6c',
-                            transition: 'width 0.3s ease'
-                          }
-                        }}
-                      >
-                        Regístrate
-                      </Typography>
-                    </Link>
-                  </Typography>
                 </Box>
               </Fade>
             </Box>

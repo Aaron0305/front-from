@@ -16,7 +16,7 @@ import Formulario from './components/Auth/Formulario';
 
 const PrivateRoute = ({ children }) => {
   const token = localStorage.getItem('token');
-  return token ? children : <Navigate to="/login" />;
+  return token ? children : <Navigate to="/Formulario" />;
 };
 
 function App() {

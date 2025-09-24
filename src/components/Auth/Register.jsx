@@ -1,7 +1,6 @@
-import React, { useState, useContext, useEffect, useRef } from 'react';
+import React, { useState, useContext } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { AuthContext } from '../../contexts/AuthContext';
-import { API_CONFIG } from '../../config/api.js';
 import {
   TextField,
   Button,
@@ -17,12 +16,6 @@ import {
   ThemeProvider,
   Grow,
   Zoom,
-  Fade,
-  Stepper,
-  Step,
-  StepLabel,
-  Avatar,
-  Grid,
   FormControl,
   InputLabel,
   Select,
@@ -33,13 +26,6 @@ import {
   VisibilityOff,
   Email,
   Lock,
-  Badge,
-  Person,
-  School,
-  MenuBook,
-  KeyboardArrowRight,
-  KeyboardArrowLeft,
-  PhotoCamera,
   Save
 } from '@mui/icons-material';
 import { theme } from '../../theme/palette';
@@ -98,22 +84,11 @@ const AnimatedTextField = ({ label, type, value, onChange, icon, endAdornment, s
 };
 
 export default function Register() {
-  const [activeStep, setActiveStep] = useState(0);
-  const [foto, setFoto] = useState(null);
-  const [fotoPreview, setFotoPreview] = useState(null);
-  const fileInputRef = useRef(null);
-  const [carreras, setCarreras] = useState([]);
-  const [isLoadingCarreras, setIsLoadingCarreras] = useState(true);
   const [formData, setFormData] = useState({
-    numeroControl: '',
-    nombre: '',
-    apellidoPaterno: '',
-    apellidoMaterno: '',
-    carrera: '',
-    role: '',  // Quitamos el valor por defecto para que el usuario deba seleccionar
     email: '',
     password: '',
-    confirmPassword: ''
+    confirmPassword: '',
+    role: ''
   });
   
   const [error, setError] = useState('');
@@ -121,35 +96,8 @@ export default function Register() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-  const { register, checkEmailExists, checkNumeroControlExists } = useContext(AuthContext);
+  const { register, checkEmailExists } = useContext(AuthContext);
   const navigate = useNavigate();
-
-  // Efecto para cargar carreras
-  useEffect(() => {
-    const fetchCarreras = async () => {
-      setIsLoadingCarreras(true);
-      try {
-        const response = await fetch(`${API_CONFIG.CARRERAS_URL}`);
-        if (!response.ok) {
-          throw new Error('Error al cargar carreras');
-        }
-        const data = await response.json();
-        console.log('Carreras recibidas:', data);
-        if (Array.isArray(data)) {
-          setCarreras(data);
-        } else {
-          throw new Error('Formato de datos inválido');
-        }
-      } catch (error) {
-        console.error('Error:', error);
-        setError('Error al cargar las carreras');
-      } finally {
-        setIsLoadingCarreras(false);
-      }
-    };
-
-    fetchCarreras();
-  }, []);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -179,25 +127,6 @@ export default function Register() {
     }
   };
 
-  // Verificación de número de control al perder el foco
-  const handleNumeroControlBlur = async () => {
-    if (formData.numeroControl.trim() !== '') {
-      const numeroControlRegex = /^[0-9A-Z]{10,15}$/; 
-      if (!numeroControlRegex.test(formData.numeroControl)) {
-        setError('El número de empleado debe tener entre 10-15 dígitos');
-        return;
-      }
-      try {
-        const numeroControlExists = await checkNumeroControlExists(formData.numeroControl);
-        if (numeroControlExists) {
-          setError('Este número de control ya está registrado');
-        }
-      } catch (err) {
-        console.error('Error al verificar número de control:', err);
-      }
-    }
-  };
-
   const handleShowPassword = (field) => {
     if (field === 'password') {
       setShowPassword(!showPassword);
@@ -206,49 +135,8 @@ export default function Register() {
     }
   };
 
-  const handleNumeroControlChange = (e) => {
-    const { value } = e.target;
-    // Solo permitir números
-    const numeroControl = value.replace(/[^0-9A-Z]/g, '');
-    if (numeroControl.length <= 15) {
-      setFormData({ 
-        ...formData,
-        numeroControl
-      });
-      setError('');
-    }
-  };
-
-  const handleFotoChange = (event) => {
-    const file = event.target.files[0];
-    if (file) {
-      if (file.size > 5000000) { // 5MB limit
-        setError('La imagen no debe superar los 5MB');
-        return;
-      }
-      setFoto(file);
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setFotoPreview(reader.result);
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
-  const handleNext = () => {
-    setActiveStep((prevStep) => prevStep + 1);
-  };
-
-  const handleBack = () => {
-    setActiveStep((prevStep) => prevStep - 1);
-  };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (activeStep !== steps.length - 1) {
-      handleNext();
-      return;
-    }
     
     setLoading(true);
     setError('');
@@ -258,22 +146,26 @@ export default function Register() {
         throw new Error('Por favor selecciona un rol (Docente o Administrador)');
       }
 
-      const formDataToSend = new FormData();
-      
-      // Asegurarnos que el role se envía correctamente
-      Object.keys(formData).forEach(key => {
-        if (key !== 'confirmPassword') {
-          formDataToSend.append(key, formData[key]);
-        }
-      });
-      
-      if (foto) {
-        formDataToSend.append('fotoPerfil', foto);
+      if (formData.password !== formData.confirmPassword) {
+        throw new Error('Las contraseñas no coinciden');
       }
 
-      console.log('Datos de registro a enviar:', Object.fromEntries(formDataToSend));
+      // Crear objeto con los datos necesarios + campos requeridos por el backend
+      const dataToSend = {
+        email: formData.email,
+        password: formData.password,
+        role: formData.role,
+        // Campos que el backend espera pero no mostramos en el frontend
+        numeroControl: '',
+        nombre: '',
+        apellidoPaterno: '',
+        apellidoMaterno: '',
+        carrera: ''
+      };
+
+      console.log('Datos de registro a enviar:', dataToSend);
       
-      const response = await register(formDataToSend);
+      const response = await register(dataToSend);
       console.log('Respuesta del registro:', response);
       
       if (!response.success) {
@@ -291,222 +183,9 @@ export default function Register() {
     }
   };
 
-  const steps = ['Información Personal', 'Información Académica', 'Cuenta'];
-
-  const renderStepContent = (step) => {
-    switch (step) {
-      case 0:
-        return (
-          <Box sx={{ mt: 2 }}>
-            <Box sx={{ display: 'flex', justifyContent: 'center', mb: 3 }}>
-              <Box
-                sx={{
-                  position: 'relative',
-                  width: 150,
-                  height: 150,
-                  borderRadius: '50%',
-                  overflow: 'hidden',
-                  border: '3px solid',
-                  borderColor: theme.palette.primary.main,
-                  boxShadow: '0 4px 8px rgba(0,0,0,0.1)'
-                }}
-              >
-                <Avatar
-                  src={fotoPreview}
-                  sx={{
-                    width: '100%',
-                    height: '100%',
-                    cursor: 'pointer'
-                  }}
-                  onClick={() => fileInputRef.current.click()}
-                >
-                  <PhotoCamera sx={{ fontSize: 40 }} />
-                </Avatar>
-                <input
-                  type="file"
-                  hidden
-                  ref={fileInputRef}
-                  accept="image/*"
-                  onChange={handleFotoChange}
-                />
-                <IconButton
-                  sx={{
-                    position: 'absolute',
-                    bottom: 0,
-                    right: 0,
-                    backgroundColor: theme.palette.primary.main,
-                    '&:hover': {
-                      backgroundColor: theme.palette.primary.dark,
-                    },
-                  }}
-                  onClick={() => fileInputRef.current.click()}
-                >
-                  <PhotoCamera sx={{ color: 'white' }} />
-                </IconButton>
-              </Box>
-            </Box>
-            
-            <AnimatedTextField
-              label="Número de Empleado"
-              name="numeroControl"
-              value={formData.numeroControl}
-              onChange={handleNumeroControlChange}
-              onBlur={handleNumeroControlBlur}
-              required
-              icon={<Badge />}
-              inputProps={{
-                maxLength: 15,
-                pattern: '[^0-9A-Z]*'
-              }}
-              helperText="Ingresa tu Empleado (10-15 caracteres)"
-            />
-            <AnimatedTextField
-              label="Nombre"
-              name="nombre"
-              value={formData.nombre}
-              onChange={handleChange}
-              required
-              icon={<Person />}
-            />
-            <AnimatedTextField
-              label="Apellido Paterno"
-              name="apellidoPaterno"
-              value={formData.apellidoPaterno}
-              onChange={handleChange}
-              required
-              icon={<Person />}
-            />
-            <AnimatedTextField
-              label="Apellido Materno"
-              name="apellidoMaterno"
-              value={formData.apellidoMaterno}
-              onChange={handleChange}
-              required
-              icon={<Person />}
-            />
-          </Box>
-        );
-      case 1:
-        return (
-          <Box sx={{ mt: 2 }}>
-            <AnimatedTextField
-              select
-              label="Carrera"
-              name="carrera"
-              value={formData.carrera}
-              onChange={handleChange}
-              required
-              icon={<School />}
-              disabled={isLoadingCarreras}
-            >
-              {isLoadingCarreras ? (
-                <MenuItem disabled>Cargando carreras...</MenuItem>
-              ) : (
-                carreras
-                  .filter(carrera => carrera.nombre.toLowerCase().includes('sistemas'))
-                  .map((carrera) => (
-                    <MenuItem key={carrera._id} value={carrera._id}>
-                      {carrera.nombre}
-                    </MenuItem>
-                  ))
-              )}
-            </AnimatedTextField>
-
-            <FormControl fullWidth required sx={{ mt: 2 }}>
-              <InputLabel>Rol de Usuario</InputLabel>
-              <Select
-                name="role"
-                value={formData.role}
-                onChange={handleChange}
-                label="Rol de Usuario"
-              >
-                <MenuItem value="docente">Docente</MenuItem>
-                <MenuItem value="admin">Administrador</MenuItem>
-              </Select>
-              <FormHelperText>
-                {!formData.role ? 'Por favor selecciona un rol' : 
-                 formData.role === 'admin' ? 'Rol de administrador seleccionado' : 'Rol de docente seleccionado'}
-              </FormHelperText>
-            </FormControl>
-          </Box>
-        );
-      case 2:
-        return (
-          <Box sx={{ mt: 2 }}>
-            <AnimatedTextField
-              label="Correo Electrónico"
-              type="email"
-              name="email"
-              value={formData.email}
-              onChange={handleChange}
-              onBlur={handleEmailBlur}
-              required
-              icon={<Email />}
-              helperText="Ingresa tu correo (ejemplo: usuario@tesjo.edu.mx)"
-            />
-            <AnimatedTextField
-              label="Contraseña"
-              type={showPassword ? 'text' : 'password'}
-              name="password"
-              value={formData.password}
-              onChange={handleChange}
-              required
-              icon={<Lock />}
-              endAdornment={
-                <InputAdornment position="end">
-                  <IconButton
-                    onClick={() => handleShowPassword('password')}
-                    edge="end"
-                  >
-                    {showPassword ? <VisibilityOff /> : <Visibility />}
-                  </IconButton>
-                </InputAdornment>
-              }
-            />
-            <AnimatedTextField
-              label="Confirmar Contraseña"
-              type={showConfirmPassword ? 'text' : 'password'}
-              name="confirmPassword"
-              value={formData.confirmPassword}
-              onChange={handleChange}
-              required
-              icon={<Lock />}
-              endAdornment={
-                <InputAdornment position="end">
-                  <IconButton
-                    onClick={() => handleShowPassword('confirm')}
-                    edge="end"
-                  >
-                    {showConfirmPassword ? <VisibilityOff /> : <Visibility />}
-                  </IconButton>
-                </InputAdornment>
-              }
-            />
-            <FormControl fullWidth required sx={{ mt: 2 }}>
-              <InputLabel>Rol</InputLabel>
-              <Select
-                name="role"
-                value={formData.role}
-                onChange={handleChange}
-                required
-              >
-                <MenuItem value="docente">Docente</MenuItem>
-                <MenuItem value="admin">Administrador</MenuItem>
-              </Select>
-              <FormHelperText>
-                {!formData.role ? 'Por favor selecciona un rol' : ''}
-              </FormHelperText>
-            </FormControl>
-          </Box>
-        );
-      default:
-        return null;
-    }
-  };
-
   return (
     <ThemeProvider theme={theme}>
-      <Container maxWidth="md" sx={{ py: 12 }}>
+      <Container maxWidth="sm" sx={{ py: 12 }}>
         <Zoom in={true} style={{ transitionDelay: '100ms' }}>
           <Paper
             elevation={6}
@@ -525,7 +204,7 @@ export default function Register() {
               }}
             >
               <Typography variant="h4" gutterBottom fontWeight="bold">
-                Registro de Docentes
+                Registro de Nuevo Administrador 
               </Typography>
               <Typography variant="subtitle1">
                 Completa el formulario para crear tu cuenta
@@ -533,16 +212,75 @@ export default function Register() {
             </Box>
 
             <Box sx={{ width: '100%', p: 4 }}>
-              <Stepper activeStep={activeStep} alternativeLabel>
-                {steps.map((label) => (
-                  <Step key={label}>
-                    <StepLabel>{label}</StepLabel>
-                  </Step>
-                ))}
-              </Stepper>
-
-              <Box component="form" onSubmit={handleSubmit} sx={{ mt: 3 }}>
-                {renderStepContent(activeStep)}
+              <Box component="form" onSubmit={handleSubmit}>
+                <AnimatedTextField
+                  label="Correo Electrónico"
+                  type="email"
+                  name="email"
+                  value={formData.email}
+                  onChange={handleChange}
+                  onBlur={handleEmailBlur}
+                  required
+                  icon={<Email />}
+                  helperText="Ingresa tu correo (ejemplo: usuario@tesjo.edu.mx)"
+                />
+                
+                <AnimatedTextField
+                  label="Contraseña"
+                  type={showPassword ? 'text' : 'password'}
+                  name="password"
+                  value={formData.password}
+                  onChange={handleChange}
+                  required
+                  icon={<Lock />}
+                  endAdornment={
+                    <InputAdornment position="end">
+                      <IconButton
+                        onClick={() => handleShowPassword('password')}
+                        edge="end"
+                      >
+                        {showPassword ? <VisibilityOff /> : <Visibility />}
+                      </IconButton>
+                    </InputAdornment>
+                  }
+                />
+                
+                <AnimatedTextField
+                  label="Confirmar Contraseña"
+                  type={showConfirmPassword ? 'text' : 'password'}
+                  name="confirmPassword"
+                  value={formData.confirmPassword}
+                  onChange={handleChange}
+                  required
+                  icon={<Lock />}
+                  endAdornment={
+                    <InputAdornment position="end">
+                      <IconButton
+                        onClick={() => handleShowPassword('confirm')}
+                        edge="end"
+                      >
+                        {showConfirmPassword ? <VisibilityOff /> : <Visibility />}
+                      </IconButton>
+                    </InputAdornment>
+                  }
+                />
+                
+                <FormControl fullWidth required sx={{ mt: 2, mb: 2 }}>
+                  <InputLabel>Rol</InputLabel>
+                  <Select
+                    name="role"
+                    value={formData.role}
+                    onChange={handleChange}
+                    label="Rol"
+                    required
+                  >
+                    <MenuItem value="docente">Docente</MenuItem>
+                    <MenuItem value="admin">Administrador</MenuItem>
+                  </Select>
+                  <FormHelperText>
+                    {!formData.role ? 'Por favor selecciona un rol' : ''}
+                  </FormHelperText>
+                </FormControl>
 
                 {error && (
                   <Grow in={!!error} timeout={500}>
@@ -568,28 +306,38 @@ export default function Register() {
                   </Grow>
                 )}
 
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 4 }}>
+                <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
                   <Button
-                    disabled={activeStep === 0}
-                    onClick={handleBack}
-                    startIcon={<KeyboardArrowLeft />}
-                  >
-                    Anterior
-                  </Button>
-                  <Button
+                    type="submit"
                     variant="contained"
-                    onClick={handleSubmit}
-                    endIcon={activeStep === steps.length - 1 ? <Save /> : <KeyboardArrowRight />}
+                    fullWidth
+                    size="large"
+                    endIcon={<Save />}
                     disabled={loading}
+                    sx={{ py: 1.5 }}
                   >
                     {loading ? (
                       <CircularProgress size={24} sx={{ color: '#fff' }} />
-                    ) : activeStep === steps.length - 1 ? (
-                      'Registrarse'
                     ) : (
-                      'Siguiente'
+                      'Registrarse'
                     )}
                   </Button>
+                </Box>
+
+                <Box sx={{ textAlign: 'center', mt: 3 }}>
+                  <Typography variant="body2" color="text.secondary">
+                    ¿Ya tienes una cuenta?{' '}
+                    <Link 
+                      to="/login" 
+                      style={{ 
+                        color: theme.palette.primary.main,
+                        textDecoration: 'none',
+                        fontWeight: 'bold'
+                      }}
+                    >
+                      Inicia sesión aquí
+                    </Link>
+                  </Typography>
                 </Box>
               </Box>
             </Box>

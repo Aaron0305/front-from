@@ -208,7 +208,7 @@ export default function Navbar() {
                     letterSpacing: '0.5px'
                   }}
                 >
-                  Regristro de Candidatos para Proyectos con la Embajada
+                  Camara de Comercio, Programa de Selecion de Candidatos
                 </Typography>
                 <Typography 
                   variant="subtitle2" 
