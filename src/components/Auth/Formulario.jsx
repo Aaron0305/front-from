@@ -279,6 +279,11 @@ export default function Register() {
       return;
     }
     // Abrir diálogo de confirmación en vez de enviar inmediatamente
+    // Validar que se haya seleccionado un grupo
+    if (!formData.grupo) {
+      setError('Por favor selecciona un grupo antes de continuar.');
+      return;
+    }
     setConfirmOpen(true);
   };
 
@@ -307,7 +312,12 @@ export default function Register() {
       if (!/^[0-9]+(?:\.[0-9])?$/.test(formData.promedio)) throw new Error('El promedio debe ser un número entero o con una sola cifra decimal (ej. 9, 9.0, 8.9)');
 
       const fd = new FormData();
-      Object.keys(formData).forEach((k) => fd.append(k, formData[k]));
+      // Enviar el título legible del grupo (no solo el id)
+      const payload = { ...formData };
+      if (payload.grupo && GROUPS[payload.grupo]) {
+        payload.grupo = GROUPS[payload.grupo].title;
+      }
+      Object.keys(payload).forEach((k) => fd.append(k, payload[k]));
       if (cvPdf) fd.append('pdf', cvPdf);
 
       const response = await fetch(API_CONFIG.FORMULATION_URL, { method: 'POST', body: fd });

@@ -221,13 +221,13 @@ export default function Navbar() {
             <Box sx={{ display: 'flex', gap: 1 }}>
               <Fade in={true} timeout={1000}>
                 <NavButton 
-                  onClick={() => navigate('/Formulario')}
+                  onClick={() => navigate('/home')}
                   sx={{ 
                     backgroundColor: isActive('/register') ? 'rgba(255, 255, 255, 0.15)' : 'transparent',
                     '&::after': isActive('/register') ? { width: '90%', backgroundColor: '#FFD700' } : {},
                   }}
                 >
-                  Registro
+                  Home
                 </NavButton>
               </Fade>
               <Fade in={true} timeout={1200}>
@@ -239,6 +239,17 @@ export default function Navbar() {
                   }}
                 >
                   Administracion
+                </NavButton>
+              </Fade>
+                            <Fade in={true} timeout={1000}>
+                <NavButton 
+                  onClick={() => navigate('/Formulario')}
+                  sx={{ 
+                    backgroundColor: isActive('/register') ? 'rgba(255, 255, 255, 0.15)' : 'transparent',
+                    '&::after': isActive('/register') ? { width: '90%', backgroundColor: '#FFD700' } : {},
+                  }}
+                >
+                  Registro
                 </NavButton>
               </Fade>
               {/* Botón de administración eliminado */}

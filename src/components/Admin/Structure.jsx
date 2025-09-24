@@ -163,6 +163,7 @@ export default function Structure() {
             'Correo Personal',
             'Institución',
             'Carrera',
+            'Grupo',
             'Promedio',
             'Estado'
         ];
@@ -188,6 +189,7 @@ export default function Structure() {
             registro.correoPersonal,
             registro.institucion,
             registro.carrera,
+            registro.grupo || '',
             registro.promedio,
             registro.estado === 'regular' ? 'Regular' : 'Irregular'
         ].map(formatCell).join(','));
@@ -598,7 +600,7 @@ export default function Structure() {
                         <TableBody>
                             {loading ? (
                                 <TableRow>
-                                    <TableCell colSpan={9} align="center" sx={{ py: 6 }}>
+                                                    <TableCell colSpan={10} align="center" sx={{ py: 6 }}>
                                         <CircularProgress size={40} />
                                         <Typography sx={{ mt: 2, color: 'text.secondary' }}>
                                             Cargando registros...
@@ -607,13 +609,13 @@ export default function Structure() {
                                 </TableRow>
                             ) : error ? (
                                 <TableRow>
-                                    <TableCell colSpan={9} align="center" sx={{ color: 'error.main', py: 4 }}>
+                                    <TableCell colSpan={10} align="center" sx={{ color: 'error.main', py: 4 }}>
                                         <Typography variant="h6">{error}</Typography>
                                     </TableCell>
                                 </TableRow>
                             ) : paginatedRegistros.length === 0 ? (
                                 <TableRow>
-                                    <TableCell colSpan={9} align="center" sx={{ py: 6 }}>
+                                    <TableCell colSpan={10} align="center" sx={{ py: 6 }}>
                                         <Typography variant="h6" color="text.secondary">
                                             {registros.length === 0 ? 
                                                 'No hay registros disponibles' : 
@@ -650,6 +652,9 @@ export default function Structure() {
                                                     color: '#3b82f6'
                                                 }}
                                             />
+                                        </TableCell>
+                                        <TableCell>
+                                            <Typography variant="body2">{registro.grupo || '-'}</Typography>
                                         </TableCell>
                                         <TableCell>
                                             <Box sx={{
