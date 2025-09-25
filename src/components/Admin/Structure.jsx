@@ -465,7 +465,7 @@ export default function Structure() {
                     
                     <Grid 
                         container 
-                        spacing={3} 
+                        spacing={2} 
                         alignItems="center"
                         sx={{
                             '& .MuiTextField-root': {
@@ -489,7 +489,15 @@ export default function Structure() {
                                 },
                                 '& .MuiSelect-select, & input': {
                                     fontSize: '0.875rem',
-                                    fontWeight: 500
+                                    fontWeight: 500,
+                                    padding: '14px 16px',
+                                    width: '100%',
+                                    minWidth: '200px'
+                                },
+                                '& .MuiSelect-select': {
+                                    whiteSpace: 'nowrap',
+                                    overflow: 'hidden',
+                                    textOverflow: 'ellipsis'
                                 }
                             }
                         }}
@@ -512,7 +520,7 @@ export default function Structure() {
                             />
                         </Grid>
 
-                        <Grid item xs={12} md={6}>
+                        <Grid item xs={12} sm={6} md={3}>
                             <TextField
                                 select
                                 fullWidth
@@ -529,7 +537,7 @@ export default function Structure() {
                                 ))}
                             </TextField>
                         </Grid>
-                        <Grid item xs={12} md={6}>
+                        <Grid item xs={12} sm={6} md={3}>
                             <TextField
                                 select
                                 fullWidth
@@ -544,7 +552,7 @@ export default function Structure() {
                             </TextField>
                         </Grid>
                         
-                        <Grid item xs={12} md={6}>
+                        <Grid item xs={12} sm={6} md={3}>
                             <TextField
                                 fullWidth
                                 label="Promedio mín"
@@ -559,7 +567,7 @@ export default function Structure() {
                                 }}
                             />
                         </Grid>
-                        <Grid item xs={12} md={6}>
+                        <Grid item xs={12} sm={6} md={3}>
                             <TextField
                                 fullWidth
                                 label="Promedio máx"

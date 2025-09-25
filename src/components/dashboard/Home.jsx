@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Box, Button, Typography, Grid, Paper } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 
@@ -13,45 +13,105 @@ const levels = [
 
 export default function Home() {
   const navigate = useNavigate();
+  const [selectedLevel, setSelectedLevel] = useState('Deseable'); // Por defecto muestra "Deseable"
 
   return (
-    <Box sx={{ bgcolor: '#0b2b6b', minHeight: '100vh', p: 4 }}>
-      <Paper elevation={6} sx={{ maxWidth: 1100, mx: 'auto', p: 3 }}>
+    <Box sx={{ bgcolor: '#0b2b6b', minHeight: '100vh', p: 4, pt: 12 }}>
+      <Paper elevation={6} sx={{ maxWidth: 1200, mx: 'auto', overflow: 'hidden' }}>
+        {/* Header */}
         <Box sx={{ bgcolor: '#0b2b6b', color: '#fff', py: 2, px: 3 }}>
           <Typography variant="h5" sx={{ fontWeight: 'bold' }}>Programa de Selección de Candidatos</Typography>
         </Box>
 
-        <Grid container spacing={2} sx={{ mt: 2 }}>
-          <Grid item xs={4}>
-            <Paper sx={{ bgcolor: '#0b2b6b', color: '#fff', p: 1 }}> 
+        {/* Contenido principal con Flexbox */}
+        <Box sx={{ display: 'flex', minHeight: 500 }}>
+          {/* Columna izquierda - Botones */}
+          <Box sx={{ width: '300px', p: 3, flexShrink: 0 }}>
+            <Paper sx={{ bgcolor: '#0b2b6b', color: '#fff', p: 1, mb: 2 }}> 
               <Typography variant="subtitle1" sx={{ fontWeight: 'bold' }}>Habilidades técnicas necesarias para el perfil</Typography>
             </Paper>
 
             {levels.map((lv) => (
-              <Paper key={lv.title} sx={{ bgcolor: '#0b2b6b', color: '#fff', p: 1, mt: 1 }}>
+              <Button
+                key={lv.title}
+                onClick={() => setSelectedLevel(lv.title)}
+                sx={{ 
+                  bgcolor: selectedLevel === lv.title ? '#1565c0' : '#0b2b6b',
+                  color: '#fff', 
+                  p: 1, 
+                  mt: 1,
+                  width: '100%',
+                  textAlign: 'left',
+                  justifyContent: 'flex-start',
+                  textTransform: 'none',
+                  '&:hover': {
+                    bgcolor: '#1565c0'
+                  }
+                }}
+              >
                 <Typography variant="body1" sx={{ fontWeight: 'bold' }}>{lv.title}</Typography>
-              </Paper>
+              </Button>
             ))}
-          </Grid>
+          </Box>
 
-          <Grid item xs={8}>
-            <Paper sx={{ p: 2, minHeight: 400 }}>
-              <Box sx={{ mb: 1 }}>
-                <Typography variant="body2">Cada candidato es evaluado en función de dichas habilidades, temas conceptuales, entrega de ejercicios realizados en un laboratorio, experiencia, dominio del inglés y habilidades sociales (comunicación, competencias analíticas, trabajo en equipo, aprendizaje, etc.).</Typography>
-              </Box>
+          {/* Columna derecha - Contenido */}
+          <Box sx={{ flex: 1, p: 3, display: 'flex', flexDirection: 'column' }}>
+            {/* Texto explicativo */}
+            <Typography variant="body1" sx={{ lineHeight: 1.6, color: '#333', mb: 2 }}>
+              Cada candidato es evaluado en función de dichas habilidades, temas conceptuales, entrega de ejercicios realizados en un laboratorio, experiencia, dominio del inglés y habilidades sociales (comunicación, competencias analíticas, trabajo en equipo, aprendizaje, etc.).
+            </Typography>
 
-              {levels.map((lv) => (
-                <Paper key={lv.title} sx={{ bgcolor: '#e9eef7', p: 2, my: 1 }}>
-                  <Typography variant="body2">{lv.text}</Typography>
-                </Paper>
-              ))}
-
-              <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 2 }}>
-                <Button variant="contained" color="primary" onClick={() => navigate('/formulario')}>Realizar Registro</Button>
-              </Box>
+            {/* Recuadro con el contenido del botón seleccionado */}
+            <Paper 
+              sx={{ 
+                bgcolor: '#0b2b6b', 
+                color: '#fff', 
+                p: 4,
+                borderRadius: '8px',
+                minHeight: 200,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                flexGrow: 1,
+                mb: 2
+              }}
+            >
+              <Typography 
+                variant="h6" 
+                sx={{ 
+                  textAlign: 'center', 
+                  fontWeight: 500,
+                  lineHeight: 1.8,
+                  fontSize: '1.1rem'
+                }}
+              >
+                {levels.find(lv => lv.title === selectedLevel)?.text || ''}
+              </Typography>
             </Paper>
-          </Grid>
-        </Grid>
+
+            {/* Botón Realizar Registro */}
+            <Box sx={{ display: 'flex', justifyContent: 'center' }}>
+              <Button 
+                variant="contained" 
+                onClick={() => navigate('/formulario')}
+                sx={{
+                  bgcolor: '#0b2b6b',
+                  color: 'white',
+                  fontWeight: 'bold',
+                  px: 4,
+                  py: 1.5,
+                  textTransform: 'uppercase',
+                  fontSize: '0.9rem',
+                  '&:hover': {
+                    bgcolor: '#1565c0'
+                  }
+                }}
+              >
+                Realizar Registro
+              </Button>
+            </Box>
+          </Box>
+        </Box>
       </Paper>
     </Box>
   );
