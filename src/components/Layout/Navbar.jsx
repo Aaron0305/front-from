@@ -262,10 +262,10 @@ export default function Navbar() {
                   <Fade in={true} timeout={1000}>
                     <NavButton 
                       sx={{ 
-                        backgroundColor: isActive('/') ? 'rgba(255, 255, 255, 0.15)' : 'transparent',
-                        '&::after': isActive('/') ? { width: '90%', backgroundColor: '#FFD700' } : {},
+                        backgroundColor: isActive('/admin-structure') ? 'rgba(255, 255, 255, 0.15)' : 'transparent',
+                        '&::after': isActive('/admin-structure') ? { width: '90%', backgroundColor: '#FFD700' } : {},
                       }}
-                      onClick={() => navigate('/')}
+                      onClick={() => navigate('/admin-structure')}
                     >
                       Inicio
                     </NavButton>
