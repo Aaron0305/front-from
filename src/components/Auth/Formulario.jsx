@@ -202,7 +202,8 @@ export default function Register() {
     institucion: '',
     carrera: '',
     promedio: '',
-    estado: '',
+    estadoAcademico: '', // Nueva propiedad
+    estado: '', // Regular/Irregular solo si es estudiante
     grupo: '',
   });
 
@@ -247,6 +248,10 @@ export default function Register() {
     }
 
     setFormData({ ...formData, [name]: newValue });
+    // Si cambia estadoAcademico y no es estudiante, limpiar estado
+    if (name === 'estadoAcademico' && newValue !== 'estudiante') {
+      setFormData((prev) => ({ ...prev, estado: '' }));
+    }
     setError('');
   };
 
@@ -293,12 +298,21 @@ export default function Register() {
       if (!formData.promedio) throw new Error('Introduce tu promedio');
       if (!/^[0-9]+(?:\.[0-9])?$/.test(formData.promedio)) throw new Error('El promedio debe ser un número entero o con una sola cifra decimal (ej. 9, 9.0, 8.9)');
 
+      // Validar estado académico
+      if (!formData.estadoAcademico) throw new Error('Selecciona el estado académico');
+      if (formData.estadoAcademico === 'estudiante' && !formData.estado) throw new Error('Selecciona si eres regular o irregular');
+
       const fd = new FormData();
       // Enviar el título legible del grupo (no solo el id)
       const payload = { ...formData };
       if (payload.grupo && GROUPS[payload.grupo]) {
         payload.grupo = GROUPS[payload.grupo].title;
       }
+      // Guardar estado académico y condición en un solo campo si es necesario
+      if (payload.estadoAcademico !== 'estudiante') {
+        payload.estado = payload.estadoAcademico;
+      }
+      delete payload.estadoAcademico;
       Object.keys(payload).forEach((k) => fd.append(k, payload[k]));
 
       const response = await fetch(API_CONFIG.FORMULATION_URL, { method: 'POST', body: fd });
@@ -349,11 +363,22 @@ export default function Register() {
               <AnimatedTextField label="Institución" name="institucion" value={formData.institucion} onChange={handleChange} required icon={<Badge />} helperText="Escribe el nombre de tu institución (solo letras)" inputProps={{ maxLength: 100, style: { textTransform: 'uppercase' } }} sx={{ maxWidth: 500, width: '100%' }} />
               <AnimatedTextField label="Carrera" name="carrera" value={formData.carrera} onChange={handleChange} required icon={<School />} helperText="Escribe tu carrera" inputProps={{ maxLength: 100, style: { textTransform: 'uppercase' } }} sx={{ maxWidth: 500, width: '100%' }} />
               <AnimatedTextField label="Promedio general" name="promedio" value={formData.promedio} onChange={handleChange} required type="text" inputProps={{ inputMode: 'decimal', pattern: '[0-9.]*', maxLength: 5 }} helperText="Ejemplo: 8.0, 8.5, 9" sx={{ maxWidth: 500, width: '100%' }} />
-              <AnimatedTextField label="Estado académico" name="estado" value={formData.estado} onChange={handleChange} required select icon={<School />} sx={{ maxWidth: 500, width: '100%' }}>
-                <MenuItem value="">Selecciona estado</MenuItem>
-                <MenuItem value="regular">Regular</MenuItem>
-                <MenuItem value="irregular">Irregular</MenuItem>
+              <AnimatedTextField label="Estado académico" name="estadoAcademico" value={formData.estadoAcademico || ''} onChange={handleChange} required select icon={<School />} sx={{ maxWidth: 500, width: '100%' }}>
+                <MenuItem value="">Selecciona estado académico</MenuItem>
+                <MenuItem value="estudiante">Estudiante</MenuItem>
+                <MenuItem value="egresado">Egresado</MenuItem>
+                <MenuItem value="titulado">Titulado</MenuItem>
+                <MenuItem value="no-titulado">No Titulado</MenuItem>
               </AnimatedTextField>
+
+              {/* Mostrar subcampo solo si es estudiante */}
+              {formData.estadoAcademico === 'estudiante' && (
+                <AnimatedTextField label="Condición académica" name="estado" value={formData.estado} onChange={handleChange} required select icon={<School />} sx={{ maxWidth: 500, width: '100%' }}>
+                  <MenuItem value="">Seleccione condición</MenuItem>
+                  <MenuItem value="regular">Regular</MenuItem>
+                  <MenuItem value="irregular">Irregular</MenuItem>
+                </AnimatedTextField>
+              )}
 
               <Box sx={{ mt: 2, textAlign: 'center', maxWidth: 500, width: '100%' }}>
                 <Button 
@@ -480,7 +505,7 @@ export default function Register() {
                       <li><strong>Institución:</strong> {formData.institucion}</li>
                       <li><strong>Carrera:</strong> {formData.carrera}</li>
                       <li><strong>Promedio general:</strong> {formData.promedio}</li>
-                      <li><strong>Estado académico:</strong> {formData.estado === 'regular' ? 'Regular' : 'Irregular'}</li>
+                      <li><strong>Estado académico:</strong> {formData.estadoAcademico === 'estudiante' ? (formData.estado === 'regular' ? 'Estudiante Regular' : formData.estado === 'irregular' ? 'Estudiante Irregular' : '') : formData.estadoAcademico ? formData.estadoAcademico.charAt(0).toUpperCase() + formData.estadoAcademico.slice(1).replace('-', ' ') : ''}</li>
                       <li><strong>Grupo:</strong> {formData.grupo}</li>
                     </Box>
                   </Box>
