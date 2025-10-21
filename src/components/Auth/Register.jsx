@@ -88,7 +88,7 @@ export default function Register() {
     email: '',
     password: '',
     confirmPassword: '',
-    role: ''
+    role: 'admin' // Se establece automáticamente como admin
   });
   
   const [error, setError] = useState('');
@@ -142,8 +142,9 @@ export default function Register() {
     setError('');
     
     try {
+      // El role ya está establecido automáticamente como 'admin'
       if (!formData.role) {
-        throw new Error('Por favor selecciona un rol (Docente o Administrador)');
+        throw new Error('Error en la configuración del rol');
       }
 
       if (formData.password !== formData.confirmPassword) {
@@ -265,6 +266,7 @@ export default function Register() {
                   }
                 />
                 
+                {/* Campo de rol oculto - solo se muestra el de administrador */}
                 <FormControl fullWidth required sx={{ mt: 2, mb: 2 }}>
                   <InputLabel>Rol</InputLabel>
                   <Select
@@ -274,11 +276,12 @@ export default function Register() {
                     label="Rol"
                     required
                   >
-                    <MenuItem value="docente">Docente</MenuItem>
+                    {/* El role de docente está en el código pero no se muestra visualmente */}
+                    <MenuItem value="docente" style={{ display: 'none' }}>Docente</MenuItem>
                     <MenuItem value="admin">Administrador</MenuItem>
                   </Select>
                   <FormHelperText>
-                    {!formData.role ? 'Por favor selecciona un rol' : ''}
+                    Rol de Administrador seleccionado automáticamente
                   </FormHelperText>
                 </FormControl>
 

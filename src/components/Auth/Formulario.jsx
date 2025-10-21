@@ -206,8 +206,6 @@ export default function Register() {
     grupo: '',
   });
 
-  const [cvPdf, setCvPdf] = useState(null);
-  const [cvError, setCvError] = useState('');
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -252,22 +250,6 @@ export default function Register() {
     setError('');
   };
 
-  const handleCvChange = (event) => {
-    const file = event.target.files && event.target.files[0];
-    if (!file) return;
-    if (file.type !== 'application/pdf') {
-      setCvError('Solo se permiten archivos PDF');
-      setCvPdf(null);
-      return;
-    }
-    if (file.size > 5 * 1024 * 1024) {
-      setCvError('El archivo no debe superar los 5MB');
-      setCvPdf(null);
-      return;
-    }
-    setCvPdf(file);
-    setCvError('');
-  };
 
   const handleNext = () => setActiveStep((s) => s + 1);
   const handleBack = () => setActiveStep((s) => s - 1);
@@ -318,7 +300,6 @@ export default function Register() {
         payload.grupo = GROUPS[payload.grupo].title;
       }
       Object.keys(payload).forEach((k) => fd.append(k, payload[k]));
-      if (cvPdf) fd.append('pdf', cvPdf);
 
       const response = await fetch(API_CONFIG.FORMULATION_URL, { method: 'POST', body: fd });
       if (!response.ok) {
@@ -375,24 +356,26 @@ export default function Register() {
               </AnimatedTextField>
 
               <Box sx={{ mt: 2, textAlign: 'center', maxWidth: 500, width: '100%' }}>
-                <Button variant="outlined" component="label" color={cvError ? 'error' : 'primary'} sx={{ mb: 1, px: 4, py: 1.5, fontSize: '1rem', borderRadius: 2, textTransform: 'none', width: '100%' }}>
+                <Button 
+                  variant="outlined" 
+                  disabled
+                  sx={{ 
+                    mb: 1, 
+                    px: 4, 
+                    py: 1.5, 
+                    fontSize: '1rem', 
+                    borderRadius: 2, 
+                    textTransform: 'none', 
+                    width: '100%',
+                    cursor: 'not-allowed'
+                  }}
+                >
                   Adjuntar CV (PDF, máx 5MB)
-                  <input type="file" hidden accept="application/pdf" onChange={handleCvChange} />
                 </Button>
 
-                {!cvPdf && (
-                  <Typography variant="caption" sx={{ mt: 1, color: 'text.secondary' }}>
-                    La subida del archivo es opcional.
-                  </Typography>
-                )}
-
-                {cvPdf && (
-                  <Typography variant="body2" sx={{ mt: 1, color: 'success.main' }}>
-                    Archivo seleccionado: {cvPdf.name}
-                  </Typography>
-                )}
-
-                {cvError && <Alert severity="error" sx={{ mt: 1 }}>{cvError}</Alert>}
+                <Typography variant="caption" sx={{ mt: 1, color: 'text.secondary' }}>
+                  Apartado en construcción
+                </Typography>
 
                 <AnimatedTextField label="Seleccione un grupo" name="grupo" value={formData.grupo} onChange={handleChange} select sx={{ mt: 2, maxWidth: 500, width: '100%' }}>
                   <MenuItem value="">Selecciona un grupo</MenuItem>
