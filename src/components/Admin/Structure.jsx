@@ -53,7 +53,7 @@ const HeaderBox = styled(Box)(() => ({
 const StyledTableContainer = styled(TableContainer)(() => ({
     borderRadius: '20px',
     boxShadow: '0 8px 40px rgba(0, 0, 0, 0.12)',
-    overflow: 'hidden',
+    overflowX: 'auto',
     '& .MuiTableCell-head': {
         background: 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)',
         fontWeight: 700,
@@ -72,6 +72,11 @@ const StyledTableContainer = styled(TableContainer)(() => ({
         fontSize: '0.875rem',
         padding: '16px',
     }
+}));
+
+// ensure table can be wider than container to trigger horizontal scroll
+const TableInner = styled('div')(() => ({
+    minWidth: 1200,
 }));
 
 // Componente estilizado para las cards de estadísticas
@@ -590,7 +595,8 @@ export default function Structure() {
             {/* Tabla de Registros */}
             <Fade in={true} timeout={1400}>
                 <StyledTableContainer component={Paper}>
-                    <Table stickyHeader>
+                    <TableInner>
+                      <Table stickyHeader>
                         <TableHead>
                             <TableRow>
                                 <TableCell>Nombre Completo</TableCell>
@@ -721,7 +727,8 @@ export default function Structure() {
                                 ))
                             )}
                         </TableBody>
-                    </Table>
+                                            </Table>
+                                        </TableInner>
                     
                     {/* Paginación */}
                     <TablePagination
@@ -752,30 +759,6 @@ export default function Structure() {
                     />
                 </StyledTableContainer>
             </Fade>
-            {/* Footer con aviso de privacidad */}
-            <Box
-                component="footer"
-                sx={{
-                    position: 'fixed',
-                    left: 0,
-                    bottom: 0,
-                    width: '100%',
-                    bgcolor: '#00238b',
-                    color: 'white',
-                    py: 1.5,
-                    textAlign: 'center',
-                    zIndex: 1200,
-                    boxShadow: '0 -2px 12px rgba(0,0,0,0.08)'
-                }}
-            >
-                <Button
-                    variant="text"
-                    sx={{ color: 'white', fontWeight: 600, textTransform: 'none', fontSize: '1rem' }}
-                    onClick={() => window.open('/aviso-privacidad', '_blank', 'noopener,noreferrer,width=700,height=600')}
-                >
-                    Aviso de Privacidad
-                </Button>
-            </Box>
         </Box>
     );
 }

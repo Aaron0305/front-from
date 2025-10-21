@@ -37,9 +37,8 @@ function App() {
             <Route path="/reset-password" element={<ResetPassword />} />
             <Route path='/admin-access' element={<AdminAccessDialog />} />
             <Route path='/admin-structure' element={<Structure />} />
-            <Route path="/dashboard" element={ <PrivateRoute> <ActiveSession /> </PrivateRoute> } />
             <Route path="/aviso-privacidad" element={<AvisoPrivacidad />} />
-            <Route path="/" element={<Navigate to="/dashboard" replace />} />
+            <Route path="/" element={<Navigate to="/home" replace />} />
           </Routes>
         </AuthProvider>
       </Router>
