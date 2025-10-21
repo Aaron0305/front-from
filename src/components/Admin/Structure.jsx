@@ -275,6 +275,7 @@ export default function Structure() {
             bgcolor: '#f1f5f9',
             padding: 3,
             pt: 10,
+            position: 'relative',
         }}>
             <Fade in={true} timeout={800}>
                 <HeaderBox>
@@ -751,6 +752,30 @@ export default function Structure() {
                     />
                 </StyledTableContainer>
             </Fade>
+            {/* Footer con aviso de privacidad */}
+            <Box
+                component="footer"
+                sx={{
+                    position: 'fixed',
+                    left: 0,
+                    bottom: 0,
+                    width: '100%',
+                    bgcolor: '#00238b',
+                    color: 'white',
+                    py: 1.5,
+                    textAlign: 'center',
+                    zIndex: 1200,
+                    boxShadow: '0 -2px 12px rgba(0,0,0,0.08)'
+                }}
+            >
+                <Button
+                    variant="text"
+                    sx={{ color: 'white', fontWeight: 600, textTransform: 'none', fontSize: '1rem' }}
+                    onClick={() => window.open('/aviso-privacidad', '_blank', 'noopener,noreferrer,width=700,height=600')}
+                >
+                    Aviso de Privacidad
+                </Button>
+            </Box>
         </Box>
     );
 }

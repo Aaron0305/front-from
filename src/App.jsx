@@ -14,6 +14,7 @@ import AdminAccessDialog from './components/Admin/AdminAccessDialog';
 import Structure from './components/Admin/Structure';
 import Formulario from './components/Auth/Formulario';
 import Home from './components/dashboard/Home';
+import AvisoPrivacidad from './components/AvisoPrivacidad';
 
 const PrivateRoute = ({ children }) => {
   const token = localStorage.getItem('token');
@@ -37,6 +38,7 @@ function App() {
             <Route path='/admin-access' element={<AdminAccessDialog />} />
             <Route path='/admin-structure' element={<Structure />} />
             <Route path="/dashboard" element={ <PrivateRoute> <ActiveSession /> </PrivateRoute> } />
+            <Route path="/aviso-privacidad" element={<AvisoPrivacidad />} />
             <Route path="/" element={<Navigate to="/dashboard" replace />} />
           </Routes>
         </AuthProvider>

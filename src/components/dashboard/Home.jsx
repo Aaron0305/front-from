@@ -113,6 +113,37 @@ export default function Home() {
           </Box>
         </Box>
       </Paper>
+      {/* Footer con aviso de privacidad */}
+      <Box
+        component="footer"
+        sx={{
+          position: 'fixed',
+          left: 0,
+          bottom: 0,
+          width: '100%',
+          bgcolor: '#00238b',
+          color: 'white',
+          py: 1.5,
+          textAlign: 'center',
+          zIndex: 1200,
+          boxShadow: '0 -2px 12px rgba(0,0,0,0.08)',
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          gap: 2
+        }}
+      >
+        <Typography variant="body2" sx={{ mr: 2, fontSize: '1rem', color: 'white' }}>
+          Tu información está protegida. Consulta nuestro
+        </Typography>
+        <Button
+          variant="text"
+          sx={{ color: 'white', fontWeight: 600, textTransform: 'none', fontSize: '1rem', p: 0, minWidth: 0 }}
+          onClick={() => window.open('/aviso-privacidad', '_blank', 'noopener,noreferrer,width=700,height=600')}
+        >
+          Aviso de Privacidad
+        </Button>
+      </Box>
     </Box>
   );
 }

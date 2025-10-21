@@ -9,6 +9,7 @@ import Structure from './components/Admin/Structure';
 import ProtectedRoute from './components/Auth/ProtectedRoute';
 import Formulario from './components/Auth/Formulario';
 import Home from './components/dashboard/Home';
+import AvisoPrivacidad from './components/AvisoPrivacidad';
 export const ROUTES = {
   LOGIN: '/login',
   REGISTER: '/register',
@@ -58,6 +59,7 @@ export default function Router() {
       />
       {/* Ruta pública del Home informativo */}
       <Route path={ROUTES.HOME_PAGE} element={<Home />} />
+      <Route path="/aviso-privacidad" element={<AvisoPrivacidad />} />
     </Routes>
   );
 }
