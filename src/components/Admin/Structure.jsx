@@ -24,6 +24,22 @@ import {
     Fade,
     Zoom
 } from '@mui/material';
+import Dialog from '@mui/material/Dialog';
+import DialogTitle from '@mui/material/DialogTitle';
+import DialogContent from '@mui/material/DialogContent';
+import DialogActions from '@mui/material/DialogActions';
+import List from '@mui/material/List';
+import ListItem from '@mui/material/ListItem';
+import ListItemText from '@mui/material/ListItemText';
+import CloseIcon from '@mui/icons-material/Close';
+import VisibilityIcon from '@mui/icons-material/Visibility';
+import ListItemIcon from '@mui/material/ListItemIcon';
+import Divider from '@mui/material/Divider';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import RadioButtonUncheckedIcon from '@mui/icons-material/RadioButtonUnchecked';
+import Avatar from '@mui/material/Avatar';
+import LinearProgress from '@mui/material/LinearProgress';
+import Stack from '@mui/material/Stack';
 import { 
     GetApp, 
     Search as SearchIcon, 
@@ -96,6 +112,8 @@ export default function Structure() {
     const [registros, setRegistros] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [selectedRegistro, setSelectedRegistro] = useState(null);
+    const [openFulfilledDialog, setOpenFulfilledDialog] = useState(false);
     const [page, setPage] = useState(0);
     const [rowsPerPage, setRowsPerPage] = useState(10);
     const [filtros, setFiltros] = useState({
@@ -271,6 +289,72 @@ export default function Structure() {
         (registros.reduce((sum, r) => sum + parseFloat(r.promedio || 0), 0) / registros.length).toFixed(2) : 0;
 
     const filtrosActivos = Object.values(filtros).some(filtro => filtro !== '');
+
+        // Mapeo de requisitos por título de grupo para comparar (debe mantenerse coordinado con Front formulario)
+        const GROUPS_MAP = {
+            'Grupo 1: Ingeniero de software, Desarrollador Full Stack (.NET/Angular)': {
+                obligatorio: [
+                    'NET Core, ASP.NET, y C++',
+                    'HTML, CSS, JavaScript',
+                    'Angular',
+                    'Base de datos SQL NoSQL',
+                    'Tecnología en la nube Azure o AWS'
+                ],
+                deseable: [
+                    'Back End (Node, java script, Python, etc.)',
+                    'Marcos de JavaScript/TypeScript',
+                    'Carteras CI/CD',
+                    'RESTful APIs'
+                ],
+                niveles: []
+            },
+            'Grupo 2: Ingeniero de software, Desarrollador Full Stack (.NET/Angular)': {
+                obligatorio: [
+                    'NET Core, ASP.NET, y C++',
+                    'HTML, CSS, JavaScript',
+                    'React',
+                    'Base de datos SQL NoSQL',
+                    'Tecnología en la nube Azure o AWS'
+                ],
+                deseable: [ 'Back End (Node, java script, Python, etc.)', 'Marcos de JavaScript/TypeScript', 'Carteras CI/CD', 'RESTful APIs' ],
+                niveles: []
+            },
+            'Grupo 3: Ingeniero de software, Desarrollador Full Stack (Java/Angular)': {
+                obligatorio: [ 'Java (8+) Spring Boot / Spring MVC, Seguridad Spring, Spring Data JPA', 'APIs: RESTful APIs, manejo de JSON/XML', 'JUnit, Mockito, Jest, Biblioteca React Testing', 'HTML5, CSS3, JavaScript (ES6+)', 'Angular o Vue.js' ],
+                deseable: [ 'Estibador', 'AWS, Azure o GCP', 'PostgreSQL, MySQL, Oracle', 'MongoDB, Redis', 'Postman or Swagger' ],
+                niveles: []
+            },
+            'Grupo 4: Ingeniero de software, Desarrollador Full Stack (Java/React)': {
+                obligatorio: [ 'Java (8+) Spring Boot / Spring MVC, Seguridad Spring, Spring Data JPA', 'APIs: RESTful APIs, manejo de JSON/XML', 'JUnit, Mockito, Jest, Biblioteca React Testing', 'HTML5, CSS3, JavaScript (ES6+)', 'React.js, Redux' ],
+                deseable: [ 'Docker', 'AWS, Azure o GCP', 'PostgreSQL, MySQL, Oracle', 'MongoDB, Redis', 'Jenkins, GitHub Actions, GitLab CI' ],
+                niveles: []
+            },
+            'Grupo 5: Ingeniero de Nube Azure': {
+                obligatorio: [ 'Servicios en la nube Azure', 'Kubernetes (AKS) y contenedores', 'Azure DevOps Pipelines y Acciones GitHub', 'PowerShell or Python', 'Formatos ARM / Procesos CI/CD' ],
+                deseable: [ 'Ansible Tower y Terraform', 'Azure SQL, Databricks, y otros servicios de Azure', 'Certificaciones AZ-104, AZ-400, CKA, CKAD (de preferencia)' ],
+                niveles: []
+            },
+            'Grupo 6: Ingeniero de Software Python': {
+                obligatorio: [ 'Python: programación orientada a objetos', 'Librerías: Pandas, NumPy, SQL Connectors, Flask, Django', 'APIs y marcadores de language XML y JSON' ],
+                deseable: [ 'AWS', 'Métodos estándar y procesos ETL', 'Conocimiento de SQL/Postgres/MySQL y normalización' ],
+                niveles: []
+            }
+        };
+
+            // Helper para normalizar cadenas y comparar sin tildes/puntuación
+            const normalize = (s) => String(s || '').toLowerCase().replace(/[^a-z0-9áéíóúñ\s]/g, '').trim();
+
+            const getSpecAndUserNormalized = (registro) => {
+                const groupTitle = registro?.grupo || '';
+                const spec = GROUPS_MAP[groupTitle] || { obligatorio: [], deseable: [], niveles: [] };
+                const userFulfilled = Array.isArray(registro?.fulfilled) ? registro.fulfilled : [];
+                const allSpecItems = [...spec.obligatorio, ...spec.deseable, ...(spec.niveles.length ? spec.niveles : [])];
+                const normalizedSpec = allSpecItems.map(normalize);
+                const normalizedUser = userFulfilled.map(normalize);
+                const matches = normalizedSpec.filter(item => normalizedUser.includes(item)).length;
+                const matchPercent = allSpecItems.length ? Math.round((matches / allSpecItems.length) * 100) : 0;
+                return { spec, userFulfilled, normalizedUser, normalizedSpec, matchPercent };
+            };
 
     return (
         <Box sx={{ 
@@ -722,6 +806,19 @@ export default function Structure() {
                                                     No disponible
                                                 </Typography>
                                             )}
+                                                                                        {/* Button para ver opciones marcadas por el usuario */}
+                                                                                        <Tooltip title="Ver opciones marcadas" arrow>
+                                                                                            <IconButton
+                                                                                                color="primary"
+                                                                                                onClick={() => {
+                                                                                                    setSelectedRegistro(registro);
+                                                                                                    setOpenFulfilledDialog(true);
+                                                                                                }}
+                                                                                                sx={{ ml: 1 }}
+                                                                                            >
+                                                                                                <VisibilityIcon />
+                                                                                            </IconButton>
+                                                                                        </Tooltip>
                                         </TableCell>
                                     </TableRow>
                                 ))
@@ -759,6 +856,87 @@ export default function Structure() {
                     />
                 </StyledTableContainer>
             </Fade>
+                        {/* Dialog para mostrar las opciones que marcó el usuario (fulfilled) */}
+                                    <Dialog
+                                        open={openFulfilledDialog}
+                                        onClose={() => setOpenFulfilledDialog(false)}
+                                        maxWidth="xl"
+                                        fullWidth
+                                        PaperProps={{ sx: { px: 0 } }}
+                                    >
+                                        <DialogTitle sx={{ p: 2 }}>
+                                            <Stack direction="row" alignItems="center" justifyContent="space-between">
+                                                <Stack direction="row" alignItems="center" spacing={2}>
+                                                    <Avatar sx={{ bgcolor: 'primary.main' }}>{selectedRegistro && selectedRegistro.nombre ? selectedRegistro.nombre.charAt(0) : 'U'}</Avatar>
+                                                    <Box>
+                                                        <Typography variant="h6" sx={{ fontWeight: 700 }}>{selectedRegistro ? `${selectedRegistro.nombre} ${selectedRegistro.apellidoPaterno || ''}` : 'Postulante'}</Typography>
+                                                        <Typography variant="caption" color="text.secondary">{selectedRegistro ? `${selectedRegistro.curp || ''} · ${selectedRegistro.grupo || ''}` : ''}</Typography>
+                                                    </Box>
+                                                </Stack>
+                                                <IconButton onClick={() => setOpenFulfilledDialog(false)}>
+                                                    <CloseIcon />
+                                                </IconButton>
+                                            </Stack>
+                                            { /* barra de coincidencia y porcentaje */ }
+                                            {selectedRegistro && (
+                                                <Box sx={{ mt: 2 }}>
+                                                    <Typography variant="caption" color="text.secondary">Coincidencia con requisitos:</Typography>
+                                                    <LinearProgress variant="determinate" value={0} sx={{ mt: 1 }} />
+                                                </Box>
+                                            )}
+                                        </DialogTitle>
+                                        <DialogContent dividers sx={{ p: 3 }}>
+                                            {selectedRegistro ? (
+                                                <Box sx={{ display: 'flex', gap: 3, flexDirection: { xs: 'column', md: 'row' } }}>
+                                                        {(() => {
+                                                            const { spec, normalizedUser, matchPercent } = getSpecAndUserNormalized(selectedRegistro);
+
+                                                            const renderColumn = (title, items) => (
+                                                                <Box sx={{ flex: 1, bgcolor: '#fff', borderRadius: 1, p: 2, boxShadow: '0 2px 10px rgba(0,0,0,0.04)' }}>
+                                                                    <Typography variant="subtitle1" sx={{ mb: 1, fontWeight: 700 }}>{title}</Typography>
+                                                                    <Divider sx={{ mb: 1 }} />
+                                                                    {items.length === 0 ? (
+                                                                        <Typography color="text.secondary">No aplica</Typography>
+                                                                    ) : (
+                                                                        <List>
+                                                                            {items.map((it, i) => {
+                                                                                const matched = normalizedUser.includes(normalize(it));
+                                                                                return (
+                                                                                    <ListItem key={i} sx={{ py: 0.5 }}>
+                                                                                        <ListItemIcon>
+                                                                                            {matched ? <CheckCircleIcon color="success" /> : <RadioButtonUncheckedIcon color="disabled" />}
+                                                                                        </ListItemIcon>
+                                                                                        <ListItemText primary={it} />
+                                                                                        {matched && <Chip label="Coincide" color="success" size="small" sx={{ ml: 1 }} />}
+                                                                                    </ListItem>
+                                                                                );
+                                                                            })}
+                                                                        </List>
+                                                                    )}
+                                                                </Box>
+                                                            );
+
+                                                            return (
+                                                                <>
+                                                                    {renderColumn('Obligatorio', spec.obligatorio)}
+                                                                    {renderColumn('Deseable', spec.deseable)}
+                                                                    {renderColumn('Niveles', spec.niveles.length ? spec.niveles : ['Nuevo ingreso', 'Junior', 'Intermedio', 'Experto', 'Líder'])}
+                                                                    {/* Mostrar porcentaje calculado */}
+                                                                    <Box sx={{ position: 'absolute', right: 24, top: 24 }}>
+                                                                        <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>{matchPercent}%</Typography>
+                                                                    </Box>
+                                                                </>
+                                                            );
+                                                        })()}
+                                                    </Box>
+                                                ) : (
+                                                    <Typography color="text.secondary">Selecciona un registro para ver sus opciones.</Typography>
+                                                )}
+                                            </DialogContent>
+                            <DialogActions>
+                                <Button onClick={() => setOpenFulfilledDialog(false)} variant="contained">Cerrar</Button>
+                            </DialogActions>
+                        </Dialog>
         </Box>
     );
 }

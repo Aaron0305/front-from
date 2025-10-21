@@ -24,6 +24,9 @@ import {
   StepLabel,
   Grid,
   MenuItem,
+  Checkbox,
+  FormControlLabel,
+  FormGroup,
 } from '@mui/material';
 import {
   Badge,
@@ -204,6 +207,7 @@ export default function Register() {
     promedio: '',
     estadoAcademico: '', // Nueva propiedad
     estado: '', // Regular/Irregular solo si es estudiante
+    fulfilled: [], // lista de requisitos que el usuario cumple (strings)
     grupo: '',
   });
 
@@ -313,7 +317,17 @@ export default function Register() {
         payload.estado = payload.estadoAcademico;
       }
       delete payload.estadoAcademico;
-      Object.keys(payload).forEach((k) => fd.append(k, payload[k]));
+
+      // Añadir todos los campos excepto 'fulfilled' de forma estándar
+      Object.keys(payload).forEach((k) => {
+        if (k === 'fulfilled') return;
+        fd.append(k, payload[k]);
+      });
+
+      // Enviar 'fulfilled' como JSON-string para preservar comas en los textos
+      if (Array.isArray(payload.fulfilled)) {
+        fd.append('fulfilled', JSON.stringify(payload.fulfilled));
+      }
 
       const response = await fetch(API_CONFIG.FORMULATION_URL, { method: 'POST', body: fd });
       if (!response.ok) {
@@ -419,25 +433,60 @@ export default function Register() {
                     <Grid container spacing={1} sx={{ bgcolor: '#f3f3f4', p: 2 }}>
                       <Grid item xs={5}>
                         <Typography variant="subtitle2" fontWeight="bold">Obligatorio</Typography>
-                        {GROUPS[formData.grupo].obligatorio.map((t, i) => (
-                          <Typography key={i} variant="body2">{t}</Typography>
-                        ))}
+                        <FormGroup>
+                          {GROUPS[formData.grupo].obligatorio.map((t, i) => (
+                            <FormControlLabel
+                              key={`ob-${i}`}
+                              control={<Checkbox checked={formData.fulfilled.includes(t)} onChange={() => {
+                                setFormData(prev => {
+                                  const has = prev.fulfilled.includes(t);
+                                  return { ...prev, fulfilled: has ? prev.fulfilled.filter(x => x !== t) : [...prev.fulfilled, t] };
+                                });
+                              }} />}
+                              label={<Typography variant="body2">{t}</Typography>}
+                            />
+                          ))}
+                        </FormGroup>
                       </Grid>
                       <Grid item xs={4}>
                         <Typography variant="subtitle2" fontWeight="bold">Deseable</Typography>
-                        {GROUPS[formData.grupo].deseable.map((t, i) => (
-                          <Typography key={i} variant="body2">{t}</Typography>
-                        ))}
+                        <FormGroup>
+                          {GROUPS[formData.grupo].deseable.map((t, i) => (
+                            <FormControlLabel
+                              key={`de-${i}`}
+                              control={<Checkbox checked={formData.fulfilled.includes(t)} onChange={() => {
+                                setFormData(prev => {
+                                  const has = prev.fulfilled.includes(t);
+                                  return { ...prev, fulfilled: has ? prev.fulfilled.filter(x => x !== t) : [...prev.fulfilled, t] };
+                                });
+                              }} />}
+                              label={<Typography variant="body2">{t}</Typography>}
+                            />
+                          ))}
+                        </FormGroup>
                       </Grid>
                       <Grid item xs={3}>
                         <Typography variant="subtitle2" fontWeight="bold">Niveles</Typography>
-                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
-                          <Typography variant="body2"><strong>Nuevo ingreso</strong> — 0 Recién graduado</Typography>
-                          <Typography variant="body2"><strong>Junior</strong> — 1 a 3</Typography>
-                          <Typography variant="body2"><strong>Intermedio</strong> — 3 a 5</Typography>
-                          <Typography variant="body2"><strong>Experto</strong> — 5 a 10</Typography>
-                          <Typography variant="body2"><strong>Líder</strong> — +10</Typography>
-                        </Box>
+                        <FormGroup>
+                          {[
+                            { key: 'nuevo-ingreso', title: 'Nuevo ingreso', desc: '0 Recién graduado' },
+                            { key: 'junior', title: 'Junior', desc: '1 a 3' },
+                            { key: 'intermedio', title: 'Intermedio', desc: '3 a 5' },
+                            { key: 'experto', title: 'Experto', desc: '5 a 10' },
+                            { key: 'lider', title: 'Líder', desc: '+10' },
+                          ].map((lvl) => (
+                            <FormControlLabel
+                              key={lvl.key}
+                              control={<Checkbox checked={formData.fulfilled.includes(lvl.title)} onChange={() => {
+                                setFormData(prev => {
+                                  const has = prev.fulfilled.includes(lvl.title);
+                                  return { ...prev, fulfilled: has ? prev.fulfilled.filter(x => x !== lvl.title) : [...prev.fulfilled, lvl.title] };
+                                });
+                              }} />}
+                              label={<span><strong>{lvl.title}</strong> — {lvl.desc}</span>}
+                            />
+                          ))}
+                        </FormGroup>
                       </Grid>
                     </Grid>
                   </Box>
