@@ -1,57 +1,58 @@
-import React, { useState, useEffect } from 'react';
-import { 
-    Box, 
-    Typography, 
-    IconButton, 
-    Button,
-    Table,
-    TableBody,
-    TableCell,
-    TableContainer,
-    TableHead,
-    TableRow,
-    Paper,
-    CircularProgress,
-    TextField,
-    Grid,
-    MenuItem,
-    InputAdornment,
-    TablePagination,
-    Chip,
-    Tooltip,
-    Card,
-    CardContent,
-    Fade,
-    Zoom
-} from '@mui/material';
+import React, { useState, useEffect, useRef } from 'react';
+import Box from '@mui/material/Box';
+import TableContainer from '@mui/material/TableContainer';
+import Table from '@mui/material/Table';
+import TableHead from '@mui/material/TableHead';
+import TableBody from '@mui/material/TableBody';
+import TableRow from '@mui/material/TableRow';
+import TableCell from '@mui/material/TableCell';
+import Paper from '@mui/material/Paper';
+import Card from '@mui/material/Card';
+import CardContent from '@mui/material/CardContent';
+import Typography from '@mui/material/Typography';
+import Button from '@mui/material/Button';
+import Grid from '@mui/material/Grid';
+import Chip from '@mui/material/Chip';
+import Fade from '@mui/material/Fade';
+import Zoom from '@mui/material/Zoom';
+import CircularProgress from '@mui/material/CircularProgress';
+import MenuItem from '@mui/material/MenuItem';
+import TextField from '@mui/material/TextField';
+import InputAdornment from '@mui/material/InputAdornment';
+import TablePagination from '@mui/material/TablePagination';
+import Tooltip from '@mui/material/Tooltip';
+import IconButton from '@mui/material/IconButton';
 import Dialog from '@mui/material/Dialog';
 import DialogTitle from '@mui/material/DialogTitle';
 import DialogContent from '@mui/material/DialogContent';
 import DialogActions from '@mui/material/DialogActions';
+import Stack from '@mui/material/Stack';
+import Avatar from '@mui/material/Avatar';
+import Divider from '@mui/material/Divider';
 import List from '@mui/material/List';
 import ListItem from '@mui/material/ListItem';
-import ListItemText from '@mui/material/ListItemText';
-import CloseIcon from '@mui/icons-material/Close';
-import VisibilityIcon from '@mui/icons-material/Visibility';
 import ListItemIcon from '@mui/material/ListItemIcon';
-import Divider from '@mui/material/Divider';
+import ListItemText from '@mui/material/ListItemText';
+import LinearProgress from '@mui/material/LinearProgress';
+import { styled } from '@mui/material/styles';
+import FilterList from '@mui/icons-material/FilterList';
+import Clear from '@mui/icons-material/Clear';
+import FileDownload from '@mui/icons-material/FileDownload';
+import Person from '@mui/icons-material/Person';
+import School from '@mui/icons-material/School';
+import Grade from '@mui/icons-material/Grade';
+import GetApp from '@mui/icons-material/GetApp';
+import VisibilityIcon from '@mui/icons-material/Visibility';
+import CloseIcon from '@mui/icons-material/Close';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import RadioButtonUncheckedIcon from '@mui/icons-material/RadioButtonUnchecked';
-import Avatar from '@mui/material/Avatar';
-import LinearProgress from '@mui/material/LinearProgress';
-import Stack from '@mui/material/Stack';
-import { 
-    GetApp, 
-    Search as SearchIcon, 
-    FileDownload,
-    FilterList,
-    Clear,
-    Person,
-    School,
-    Grade
-} from '@mui/icons-material';
-import { styled } from '@mui/material/styles';
+import SearchIcon from '@mui/icons-material/Search';
+import Papa from 'papaparse';
 import { API_CONFIG } from '../../config/api.js';
+import Snackbar from '@mui/material/Snackbar';
+import Alert from '@mui/material/Alert';
+
+
 
 // Componente estilizado para el header
 const HeaderBox = styled(Box)(() => ({
@@ -109,11 +110,87 @@ const StatsCard = styled(Card)(() => ({
 }));
 
 export default function Structure() {
+    const [openFulfilledDialog, setOpenFulfilledDialog] = useState(false);
+    const [selectedRegistro, setSelectedRegistro] = useState(null);
+    // State declarations
     const [registros, setRegistros] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
-    const [selectedRegistro, setSelectedRegistro] = useState(null);
-    const [openFulfilledDialog, setOpenFulfilledDialog] = useState(false);
+    const [csvDialogOpen, setCsvDialogOpen] = useState(false);
+    const [csvPreviewRows, setCsvPreviewRows] = useState([]);
+    const [csvPreviewHeaders, setCsvPreviewHeaders] = useState([]);
+    const [csvImportError, setCsvImportError] = useState(null);
+    const [csvImporting, setCsvImporting] = useState(false);
+    const [csvSuccess, setCsvSuccess] = useState(false);
+    const fileInputRef = useRef();
+
+    // Handler stubs for CSV import (replace with real logic as needed)
+    const handleOpenCsvDialog = () => {
+        setCsvDialogOpen(true);
+    };
+    const handleCsvFileChange = (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        setCsvImportError(null);
+        setCsvPreviewRows([]);
+        setCsvPreviewHeaders([]);
+        Papa.parse(file, {
+            header: true,
+            skipEmptyLines: true,
+            complete: (results) => {
+                if (results.errors && results.errors.length > 0) {
+                    setCsvImportError('Error al procesar el archivo CSV.');
+                    return;
+                }
+                setCsvPreviewRows(results.data);
+                setCsvPreviewHeaders(results.meta.fields || []);
+                setCsvDialogOpen(true);
+            },
+            error: () => {
+                setCsvImportError('Error al leer el archivo CSV.');
+            }
+        });
+        // Limpia el input para permitir volver a seleccionar el mismo archivo si es necesario
+        e.target.value = '';
+    };
+    // Importar los datos del CSV a la base de datos
+    const handleImportCsvToDb = async () => {
+        setCsvImporting(true);
+        setCsvImportError(null);
+        try {
+            const response = await fetch(`${API_CONFIG.FORMULATION_URL}/import-csv`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ registros: csvPreviewRows }),
+            });
+            const result = await response.json();
+            if (!response.ok) {
+                // Si el backend manda errores detallados, los mostramos
+                if (result && result.errores && Array.isArray(result.errores) && result.errores.length > 0) {
+                    setCsvImportError(result.errores.map(e => `Fila ${e.fila}: ${e.error}`).join('\n'));
+                } else if (result && result.error) {
+                    setCsvImportError(result.error);
+                } else {
+                    setCsvImportError('Error al importar los datos.');
+                }
+                return;
+            }
+            setCsvDialogOpen(false);
+            setCsvSuccess(true);
+            // Recargar los registros desde la base de datos
+            setLoading(true);
+            const res = await fetch(API_CONFIG.FORMULATION_URL);
+            const data = await res.json();
+            setRegistros(data);
+        } catch (err) {
+            setCsvImportError(err.message || 'Error desconocido al importar.');
+        } finally {
+            setCsvImporting(false);
+        }
+    };
+
     const [page, setPage] = useState(0);
     const [rowsPerPage, setRowsPerPage] = useState(10);
     const [filtros, setFiltros] = useState({
@@ -264,6 +341,7 @@ export default function Structure() {
         return cumpleBusqueda && cumpleCarrera && cumpleEstado && cumplePromedioMin && cumplePromedioMax;
     });
 
+
     // Paginación
     const handleChangePage = (event, newPage) => {
         setPage(newPage);
@@ -357,60 +435,142 @@ export default function Structure() {
             };
 
     return (
-        <Box sx={{ 
-            display: 'flex', 
-            flexDirection: 'column', 
-            minHeight: '100vh', 
-            bgcolor: '#f1f5f9',
-            padding: 3,
-            pt: 10,
-            position: 'relative',
-        }}>
-            <Fade in={true} timeout={800}>
-                <HeaderBox>
-                    <Box sx={{ 
-                        display: 'flex', 
-                        alignItems: 'center', 
-                        gap: 2, 
-                        mb: 3,
-                        px: 2,
-                    }}>
-                        <Typography 
-                            variant="h3" 
-                            component="h1" 
-                            sx={{ 
-                                fontWeight: 700,
-                                flexGrow: 1,
-                                letterSpacing: '0.5px',
-                                textShadow: '2px 2px 4px rgba(0,0,0,0.3)',
-                                background: 'linear-gradient(45deg, #ffffff, #e2e8f0)',
-                                backgroundClip: 'text',
-                                WebkitBackgroundClip: 'text',
-                                WebkitTextFillColor: 'transparent'
+        <>
+            <Box sx={{ 
+                display: 'flex', 
+                flexDirection: 'column', 
+                minHeight: '100vh', 
+                bgcolor: '#f1f5f9',
+                padding: 3,
+                pt: 10,
+                position: 'relative',
+            }}>
+                <Fade in={true} timeout={800}>
+                    <HeaderBox>
+                        <Box sx={{ 
+                            display: 'flex', 
+                            alignItems: 'center', 
+                            gap: 2, 
+                            mb: 3,
+                            px: 2,
+                        }}>
+                            <Typography 
+                                variant="h3" 
+                                component="h1" 
+                                sx={{ 
+                                    fontWeight: 700,
+                                    flexGrow: 1,
+                                    letterSpacing: '0.5px',
+                                    textShadow: '2px 2px 4px rgba(0,0,0,0.3)',
+                                    background: 'linear-gradient(45deg, #ffffff, #e2e8f0)',
+                                    backgroundClip: 'text',
+                                    WebkitBackgroundClip: 'text',
+                                    WebkitTextFillColor: 'transparent'
                             }}
-                        >
-                            Panel de Administración
+                            >
+                                Panel de Administración
+                            </Typography>
+                            <Button
+                                variant="contained"
+                                href="/Register"
+                                sx={{
+                                    textTransform: 'none',
+                                    fontWeight: 600,
+                                    borderRadius: '12px',
+                                    px: 3,
+                                    py: 1.5,
+                                    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                                    backdropFilter: 'blur(10px)',
+                                    border: '1px solid rgba(255, 255, 255, 0.3)',
+                                    '&:hover': {
+                                        backgroundColor: 'rgba(255, 255, 255, 0.3)',
+                                        transform: 'translateY(-2px)',
+                                    }
+                                }}
+                            >
+                                Nuevo Administrador
+                            </Button>
+                            <Button
+                                variant="outlined"
+                                sx={{
+                                    ml: 2,
+                                    borderRadius: '12px',
+                                    fontWeight: 600,
+                                    textTransform: 'none',
+                                    background: 'linear-gradient(135deg,#e0e7ff 0%,#f1f5f9 100%)',
+                                    border: '1px solid #64748b',
+                                    color: '#1e293b',
+                                    '&:hover': {
+                                        background: 'linear-gradient(135deg,#c7d2fe 0%,#e0e7ff 100%)',
+                                    }
+                                }}
+                                onClick={handleOpenCsvDialog}
+                            >
+                                Importar CSV
+                            </Button>
+                            <input
+                                type="file"
+                                accept=".csv"
+                                ref={fileInputRef}
+                                style={{ display: 'none' }}
+                                onChange={handleCsvFileChange}
+                            />
+            {/* Dialog de previsualización de importación CSV */}
+            <Dialog
+                open={csvDialogOpen}
+                onClose={() => setCsvDialogOpen(false)}
+                maxWidth="xl"
+                fullWidth
+            >
+                <DialogTitle>Previsualización de datos CSV</DialogTitle>
+                <DialogContent dividers>
+                    {csvImportError && (
+                        <Typography color="error" sx={{ mb: 2 }}>
+                            {csvImportError.split('\n').map((line, idx) => (
+                                <span key={idx} style={{ display: 'block' }}>{line}</span>
+                            ))}
                         </Typography>
-                        <Button
-                            variant="contained"
-                            href="/Register"
-                            sx={{
-                                textTransform: 'none',
-                                fontWeight: 600,
-                                borderRadius: '12px',
-                                px: 3,
-                                py: 1.5,
-                                backgroundColor: 'rgba(255, 255, 255, 0.2)',
-                                backdropFilter: 'blur(10px)',
-                                border: '1px solid rgba(255, 255, 255, 0.3)',
-                                '&:hover': {
-                                    backgroundColor: 'rgba(255, 255, 255, 0.3)',
-                                    transform: 'translateY(-2px)',
-                                }
-                            }}
-                        >
-                            Nuevo Administrador
-                        </Button>
+                    )}
+                    {!csvImportError && csvPreviewRows.length > 0 && (
+                        <TableContainer component={Paper} sx={{ mb: 2, borderRadius: 2 }}>
+                            <Table size="small">
+                                <TableHead>
+                                    <TableRow>
+                                        {csvPreviewHeaders.map((header, idx) => (
+                                            <TableCell key={idx} sx={{ fontWeight: 700 }}>{header}</TableCell>
+                                        ))}
+                                    </TableRow>
+                                </TableHead>
+                                <TableBody>
+                                    {csvPreviewRows.slice(0, 20).map((row, i) => (
+                                        <TableRow key={i}>
+                                            {csvPreviewHeaders.map((header, j) => (
+                                                <TableCell key={j}>{row[header]}</TableCell>
+                                            ))}
+                                        </TableRow>
+                                    ))}
+                                </TableBody>
+                            </Table>
+                            {csvPreviewRows.length > 20 && (
+                                <Typography variant="caption" sx={{ p: 2 }}>
+                                    Mostrando solo los primeros 20 registros de {csvPreviewRows.length}.
+                                </Typography>
+                            )}
+                        </TableContainer>
+                    )}
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => setCsvDialogOpen(false)} disabled={csvImporting}>Cancelar</Button>
+                    <Button
+                        onClick={handleImportCsvToDb}
+                        variant="contained"
+                        color="primary"
+                        disabled={csvImporting || !!csvImportError || csvPreviewRows.length === 0}
+                    >
+                        {csvImporting ? 'Importando...' : 'Importar a la base de datos'}
+                    </Button>
+                </DialogActions>
+            </Dialog>
                     </Box>
                     <Typography 
                         variant="subtitle1" 
@@ -535,6 +695,25 @@ export default function Structure() {
                         >
                             Limpiar Filtros
                         </Button>
+                        <Button
+                            variant="outlined"
+                            startIcon={<GetApp />}
+                            onClick={() => fileInputRef.current && fileInputRef.current.click()}
+                            sx={{
+                                borderRadius: '10px',
+                                textTransform: 'none',
+                                ml: 2
+                            }}
+                        >
+                            Importar CSV
+                        </Button>
+                        <input
+                            type="file"
+                            accept=".csv"
+                            ref={fileInputRef}
+                            style={{ display: 'none' }}
+                            onChange={handleCsvFileChange}
+                        />
                         <Button
                             variant="contained"
                             startIcon={<FileDownload />}
@@ -937,6 +1116,12 @@ export default function Structure() {
                                 <Button onClick={() => setOpenFulfilledDialog(false)} variant="contained">Cerrar</Button>
                             </DialogActions>
                         </Dialog>
-        </Box>
+            </Box>
+            <Snackbar open={csvSuccess} autoHideDuration={4000} onClose={() => setCsvSuccess(false)} anchorOrigin={{ vertical: 'top', horizontal: 'center' }}>
+                <Alert onClose={() => setCsvSuccess(false)} severity="success" sx={{ width: '100%' }}>
+                    ¡Importación exitosa! Los registros fueron cargados correctamente.
+                </Alert>
+            </Snackbar>
+        </>
     );
 }
